@@ -39,7 +39,6 @@ headers = {
 
 
 name_dic = {}
-output_dir = '/Users/Spirit/PycharmProjects/zhisland/tianyancha/'
 
 black_list = ["无", "测试", "个人"]
 
@@ -49,8 +48,6 @@ def tianyan_crawler(f = 0, limit=999999):
     phantomjs_path = '/usr/local/bin/phantomjs'
     brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
-    ip_change_cnt = 0
-
 
     for line in open('uc_company'):
         if line.strip() == '':
@@ -112,7 +109,7 @@ def tianyan_crawler(f = 0, limit=999999):
 
         if i % 10 == 0:
             last_id = open(id_log, mode='w')
-            last_id.write(i)
+            last_id.write(str(i))
             last_id.close()
 
 
@@ -130,4 +127,5 @@ if __name__ == '__main__':
         last_id = int(open(id_log).readline())
     else:
         last_id = 0
+    print last_id
     tianyan_crawler(f=last_id)
