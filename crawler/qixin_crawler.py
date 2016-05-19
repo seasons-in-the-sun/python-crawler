@@ -78,7 +78,7 @@ def tianyan_crawler(f = 0, limit=999999):
         whole_text = soup.body.get_text()
         if '为确认本次访问为正常用户行为' in whole_text: #触发验证
             long_sleep = random.uniform(600, 1500)
-            print("%d 触发验证码, will sleep %d seconds" % (id, long_sleep))
+            print("%d 触发验证码, will sleep %s seconds" % (id, long_sleep))
             brower.quit()
             time.sleep(long_sleep)
 
