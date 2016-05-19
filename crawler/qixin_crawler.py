@@ -80,11 +80,12 @@ def tianyan_crawler(f = 0, limit=999999):
             long_sleep = random.uniform(600, 1500)
             print("%s 触发验证码, will sleep %s seconds" % (id, long_sleep))
             brower.quit()
-            time.sleep(long_sleep)
 
             service_args = get_service_args()
+            print(service_args)
             brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service_args)
             brower.quit()
+            time.sleep(long_sleep)
             brower = webdriver.PhantomJS(executable_path=phantomjs_path)
 
         links = soup.body.find_all('a', {'class':'query_name'})
