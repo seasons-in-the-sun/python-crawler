@@ -15,12 +15,17 @@ import os
 __author__ = 'Spirit'
 
 # brower = webdriver.Firefox()
-
+phantomjs_path = '/usr/local/bin/phantomjs'
 id_log = 'id_log.txt'
 
 def get_service_args():
     ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=1&delay=1&category=2&sortby=time&foreign=none&protocol=https'
     a = requests.get(ip_url)
+    # ip_port = a.text.strip().encode('utf-8')
+    # ip = ip_port.split(":")[0]
+    # port = ip_port.split(":")[1]
+    # return ip, port
+    print(a.text)
     service_args = [
     '--proxy=%s' % a.text.strip().encode('utf-8'),
     '--proxy-type=https',
@@ -38,17 +43,43 @@ headers = {
     }
 
 
-name_dic = {}
+def install_new_driver(ip_chng_cnt=1):
+    if ip_chng_cnt % 4 == 0:
+        brower = webdriver.PhantomJS(executable_path=phantomjs_path)
+        brower.delete_all_cookies()
+        return brower
+    else:
+        retry = 1
+        while True:
+            service = get_service_args()
+            brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service)
+
+
+            test_url = 'http://www.tianyancha.com/company/24636152'
+            brower.get(test_url)
+
+            soup = BeautifulSoup(brower.page_source, 'html.parser')
+            title = soup.title.get_text()
+            if title != '页面载入出错':
+                print ("第%s次换代理成功" % retry)
+                return brower
+            else:
+                retry += 1
+                time.sleep(2)
+                if retry > 10:
+                    print("换了10次代理还不行, 睡一会再说")
+                    brower = webdriver.PhantomJS(executable_path=phantomjs_path)
+                    brower.delete_all_cookies()
+                    return brower
+
 
 black_list = ["无", "测试", "个人"]
 
 def tianyan_crawler(f = 0, limit=999999):
     output_dir = 'result/'
-
-    phantomjs_path = '/usr/local/bin/phantomjs'
     brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
-
+    ip_change_cnt = 0
     for line in open('uc_company'):
         if line.strip() == '':
             continue
@@ -77,16 +108,13 @@ def tianyan_crawler(f = 0, limit=999999):
 
         whole_text = soup.body.get_text()
         if '为确认本次访问为正常用户行为' in whole_text: #触发验证
-            long_sleep = random.uniform(600, 1500)
-            print("%s 触发验证码, will sleep %s seconds" % (id, long_sleep))
+            ip_change_cnt += 1
             brower.quit()
 
-            service_args = get_service_args()
-            print(service_args)
-            brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service_args)
-            brower.quit()
-            time.sleep(long_sleep)
-            brower = webdriver.PhantomJS(executable_path=phantomjs_path)
+            brower = install_new_driver(ip_change_cnt)
+
+            # brower.quit()
+            # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
 
         links = soup.body.find_all('a', {'class':'query_name'})
         if links is None or len(links) < 1:
@@ -96,7 +124,7 @@ def tianyan_crawler(f = 0, limit=999999):
         detail_url = "http://tianyancha.com" + href
 
         brower.get(detail_url)
-        r = random.uniform(13, 28)
+        r = random.uniform(10, 25)
         time.sleep(r)
         print(i, r)
 
@@ -113,7 +141,7 @@ def tianyan_crawler(f = 0, limit=999999):
             last_id.write(str(i))
             last_id.close()
 
-
+    brower.quit()
 
 def get_all_links(hrefs):
     result = ''
@@ -130,3 +158,5 @@ if __name__ == '__main__':
         last_id = 0
     print last_id
     tianyan_crawler(f=last_id)
+    # ip, port = get_service_args()
+    # print(ip, port)
