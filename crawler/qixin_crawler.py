@@ -68,6 +68,7 @@ def install_new_driver(ip_chng_cnt=1):
                 time.sleep(2)
                 if retry > 10:
                     print("换了10次代理还不行, 睡一会再说")
+                    time.sleep(600)
                     brower = webdriver.PhantomJS(executable_path=phantomjs_path)
                     brower.delete_all_cookies()
                     return brower
