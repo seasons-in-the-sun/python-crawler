@@ -59,8 +59,8 @@ def install_new_driver(ip_chng_cnt=1):
             brower.get(test_url)
 
             soup = BeautifulSoup(brower.page_source, 'html.parser')
-            title = soup.title.get_text()
-            if title != '页面载入出错':
+            title = soup.title
+            if title is not None and title.get_text() != '页面载入出错':
                 print ("第%s次换代理成功" % retry)
                 return brower
             else:
