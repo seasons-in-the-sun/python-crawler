@@ -123,6 +123,7 @@ def tianyan_crawler(f = 0, limit=999999):
             continue
         href = links[0].get('href')
         detail_url = "http://tianyancha.com" + href
+        print(detail_url)
 
         brower.get(detail_url)
         r = random.uniform(10, 25)
