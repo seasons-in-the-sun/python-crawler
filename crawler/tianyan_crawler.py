@@ -113,7 +113,9 @@ def tianyan_crawler(f = 0, limit=999999):
             brower.quit()
 
             brower = install_new_driver(ip_change_cnt)
-
+            time.sleep(5)
+            brower.get(url)
+            soup = BeautifulSoup(brower.page_source, 'html.parser')
             # brower.quit()
             # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
 
@@ -131,13 +133,9 @@ def tianyan_crawler(f = 0, limit=999999):
         print(i, r)
 
         text = brower.page_source
-
-
         aaa = open(output, mode='w')
         aaa.write(text)
         aaa.close()
-
-
         if i % 10 == 0:
             last_id = open(id_log, mode='w')
             last_id.write(str(i))
