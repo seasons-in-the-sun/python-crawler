@@ -11,12 +11,22 @@ from selenium import webdriver
 import time
 import random
 import os
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
 
 __author__ = 'Spirit'
 
 # brower = webdriver.Firefox()
 phantomjs_path = '/usr/local/bin/phantomjs'
 id_log = 'id_log.txt'
+
+dcap = dict(DesiredCapabilities.PHANTOMJS)
+
+dcap["phantomjs.page.settings.userAgent"] = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:25.0) Gecko/20100101 Firefox/25.0 "
+)
+
+
 
 def get_service_args():
     ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=1&delay=1&category=2&sortby=time&foreign=none&protocol=https'
@@ -52,8 +62,7 @@ def install_new_driver(ip_chng_cnt=1):
         retry = 1
         while True:
             service = get_service_args()
-            brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service)
-
+            brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service, desired_capabilities=dcap)
 
             test_url = 'http://www.tianyancha.com/company/24636152'
             brower.get(test_url)
