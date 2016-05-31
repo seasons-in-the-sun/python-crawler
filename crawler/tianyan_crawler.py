@@ -29,7 +29,7 @@ dcap["phantomjs.page.settings.userAgent"] = (
 
 def check_proxy(ip_url):
     proxies = {}
-    proxies['http'] = ip_url.strip()
+    proxies['http'] = ip_url.text.strip()
     try:
         r  = requests.get('http://www.baidu.com', proxies=proxies, timeout = 5)
         if r:
