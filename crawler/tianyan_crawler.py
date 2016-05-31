@@ -12,7 +12,7 @@ import time
 import random
 import os
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
+import requests
 
 __author__ = 'Spirit'
 
@@ -23,18 +23,33 @@ id_log = 'id_log.txt'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 
 dcap["phantomjs.page.settings.userAgent"] = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:25.0) Gecko/20100101 Firefox/25.0 "
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
 )
+
+
+def check_proxy(ip_url):
+    proxies = {}
+    proxies['http'] = ip_url.strip()
+    try:
+        r  = requests.get('http://www.baidu.com', proxies=proxies, timeout = 5)
+        if r:
+            return True
+        else:
+            return False
+    except Exception as e:
+        return False
+
 
 
 
 def get_service_args():
-    ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=1&delay=1&category=2&sortby=time&foreign=none&protocol=https'
-    a = requests.get(ip_url)
-    # ip_port = a.text.strip().encode('utf-8')
-    # ip = ip_port.split(":")[0]
-    # port = ip_port.split(":")[1]
-    # return ip, port
+    check_result = False
+    while not check_result:
+        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=1&delay=1&category=2&sortby=time&foreign=none&operator=2&area=北京'
+        a = requests.get(ip_url)
+        check_result = check_proxy(a)
+        time.sleep(2)
+
     print(a.text)
     service_args = [
     '--proxy=%s' % a.text.strip().encode('utf-8'),
@@ -53,34 +68,40 @@ headers = {
     }
 
 
-def install_new_driver(ip_chng_cnt=1):
-    if ip_chng_cnt % 4 == 0:
-        brower = webdriver.PhantomJS(executable_path=phantomjs_path)
-        brower.delete_all_cookies()
-        return brower
-    else:
-        retry = 1
-        while True:
-            service = get_service_args()
-            brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service, desired_capabilities=dcap)
+# def install_new_driver(ip_chng_cnt=1):
+#     if ip_chng_cnt % 4 == 0:
+#         brower = webdriver.PhantomJS(executable_path=phantomjs_path)
+#         brower.delete_all_cookies()
+#         return brower
+#     else:
+#         retry = 1
+#         while True:
+#             service = get_service_args()
+#             brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service, desired_capabilities=dcap)
+#
+#             test_url = 'http://www.tianyancha.com/company/24636152'
+#             brower.get(test_url)
+#
+#             soup = BeautifulSoup(brower.page_source, 'html.parser')
+#             title = soup.title
+#             if title is not None and title.get_text() != '页面载入出错':
+#                 print ("第%s次换代理成功" % retry)
+#                 return brower
+#             else:
+#                 retry += 1
+#                 time.sleep(2)
+#                 if retry > 10:
+#                     print("换了10次代理还不行, 睡一会再说")
+#                     time.sleep(600)
+#                     brower = webdriver.PhantomJS(executable_path=phantomjs_path)
+#                     brower.delete_all_cookies()
+#                     return brower
 
-            test_url = 'http://www.tianyancha.com/company/24636152'
-            brower.get(test_url)
 
-            soup = BeautifulSoup(brower.page_source, 'html.parser')
-            title = soup.title
-            if title is not None and title.get_text() != '页面载入出错':
-                print ("第%s次换代理成功" % retry)
-                return brower
-            else:
-                retry += 1
-                time.sleep(2)
-                if retry > 10:
-                    print("换了10次代理还不行, 睡一会再说")
-                    time.sleep(600)
-                    brower = webdriver.PhantomJS(executable_path=phantomjs_path)
-                    brower.delete_all_cookies()
-                    return brower
+def install_new_driver():
+    service = get_service_args()
+    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service, desired_capabilities=dcap)
+    return brower
 
 
 black_list = ["无", "测试", "个人"]
@@ -121,7 +142,6 @@ def tianyan_crawler(f = 0, limit=999999):
         if '为确认本次访问为正常用户行为' in whole_text: #触发验证
             ip_change_cnt += 1
             brower.quit()
-
             brower = install_new_driver(ip_change_cnt)
             time.sleep(5)
             brower.get(url)
@@ -168,5 +188,3 @@ if __name__ == '__main__':
         last_id = 0
     print last_id
     tianyan_crawler(f=last_id)
-    # ip, port = get_service_args()
-    # print(ip, port)
