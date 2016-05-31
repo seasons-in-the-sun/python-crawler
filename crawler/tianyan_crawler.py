@@ -138,7 +138,7 @@ def tianyan_crawler(f = 0, limit=999999):
         print(detail_url)
 
         brower.get(detail_url)
-        r = random.uniform(10, 25)
+        r = random.uniform(15, 35)
         time.sleep(r)
         print(i, r)
 
