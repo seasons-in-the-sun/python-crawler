@@ -87,9 +87,10 @@ black_list = ["无", "测试", "个人"]
 
 def tianyan_crawler(f = 0, limit=999999):
     output_dir = 'result/'
-    brower = webdriver.PhantomJS(executable_path=phantomjs_path)
+    # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
     ip_change_cnt = 0
+    brower = install_new_driver()
     for line in open('uc_company'):
         if line.strip() == '':
             continue
