@@ -18,7 +18,7 @@ __author__ = 'Spirit'
 
 # brower = webdriver.Firefox()
 phantomjs_path = '/usr/local/bin/phantomjs'
-phantomjs_path = '/server/phantomjs-2.1.1-macosx/bin/phantomjs'
+# phantomjs_path = '/server/phantomjs-2.1.1-macosx/bin/phantomjs'
 id_log = 'id_log.txt'
 
 dcap = dict(DesiredCapabilities.PHANTOMJS)
@@ -65,8 +65,8 @@ def check_proxy(ip_url):
 
 
 init_service_args = [
-    # '--proxy=123.123.151.113:8888',
-    # '--proxy-type=http',
+    '--proxy=123.123.151.113:8888',
+    '--proxy-type=http',
     ]
 
 def get_service_args():
@@ -145,16 +145,19 @@ def tianyan_crawler(f = 0, limit=999999):
     for line in open('uc_company'):
         if line.strip() == '':
             continue
-        segs = line.split("\t")
-        id = segs[0]
-        name = segs[1].strip()
-        output = output_dir + id + ".html"
+
         i = i + 1
 
         if i < f:
             continue
         if i > limit:
             break
+
+        segs = line.split("\t")
+        id = segs[0]
+        name = segs[1].strip()
+        output = output_dir + id + ".html"
+
 
         if os.path.isfile(output):
             continue
