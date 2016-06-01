@@ -76,7 +76,7 @@ def get_service_args():
         ip = check_proxy(a)
         if ip != '':
             check_result = True
-            print(a.text)
+            print(ip + " available")
             service_args = [
     '--proxy=%s' % ip.encode('utf-8'),
     '--proxy-type=https',
