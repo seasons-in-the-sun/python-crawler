@@ -51,8 +51,10 @@ def check_proxy(ip_url):
         if r:
             return True
         else:
+            print(proxies['http'] + ' not work')
             return False
     except Exception as e:
+        print(proxies['http'] + ' not work')
         return False
 
 
@@ -169,7 +171,7 @@ def tianyan_crawler(f = 0, limit=999999):
         soup = BeautifulSoup(brower.page_source, 'html.parser')
 
         whole_text = soup.body.get_text()
-        if '为确认本次访问为正常用户行为' in whole_text: #触发验证
+        if '为确认本次访问为正常用户行为' in whole_text or '403 Forbidden' in whole_text: #触发验证
             ip_change_cnt += 1
             brower.quit()
             brower = install_new_driver(ip_change_cnt)
@@ -191,7 +193,7 @@ def tianyan_crawler(f = 0, limit=999999):
         r = random.uniform(15, 35)
 
         time.sleep(r)
-        print(i, r)
+        print(id, name, i, r)
 
         text = brower.page_source
         aaa = open(output, mode='w')
