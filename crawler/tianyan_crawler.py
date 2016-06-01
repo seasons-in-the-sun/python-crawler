@@ -18,6 +18,7 @@ __author__ = 'Spirit'
 
 # brower = webdriver.Firefox()
 phantomjs_path = '/usr/local/bin/phantomjs'
+phantomjs_path = '/server/phantomjs-2.1.1-macosx/bin/phantomjs'
 id_log = 'id_log.txt'
 
 dcap = dict(DesiredCapabilities.PHANTOMJS)
@@ -39,7 +40,7 @@ uas = [
 
 
 dcap["phantomjs.page.settings.userAgent"] = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
+    "Mozilla/5.0 (compatible; WOW64; MSIE 10.0; Windows NT 6.2)"
 )
 dcap["phantomjs.page.customHeaders.Referer"] = ("http://www.baidu.com")
 
@@ -64,8 +65,8 @@ def check_proxy(ip_url):
 
 
 init_service_args = [
-    '--proxy=123.123.151.113:8888',
-    '--proxy-type=http',
+    # '--proxy=123.123.151.113:8888',
+    # '--proxy-type=http',
     ]
 
 def get_service_args():
@@ -181,7 +182,7 @@ def tianyan_crawler(f = 0, limit=999999):
         links = soup.body.find_all('a', {'class':'query_name'})
         if links is None or len(links) < 1:
             print("%dth, %s not find" % (i, name))
-            print whole_text
+            print whole_text.strip()
             continue
         href = links[0].get('href')
         detail_url = "http://tianyancha.com" + href
@@ -212,6 +213,24 @@ def get_all_links(hrefs):
             result += h + "\n"
     return result
 
+def test():
+    name = '法布雷加斯'
+    url = "http://tianyancha.com/search/%s" % quote(name)
+    # print(url)
+    # return
+    # http://www.tianyancha.com/search/%E5%BE%AE%E4%BC%81%E6%B1%87
+    # http://tianyancha.com/search/%E5%BE%AE%E4%BC%81%E6%B1%87
+    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
+
+
+    brower.get(url)
+    soup = BeautifulSoup(brower.page_source, 'html.parser')
+    whole_text = soup.body.get_text()
+
+
+    print(whole_text.strip())
+    brower.quit()
+
 if __name__ == '__main__':
     if os.path.isfile(id_log):
         last_id = int(open(id_log).readline())
@@ -220,3 +239,4 @@ if __name__ == '__main__':
     print last_id
     tianyan_crawler(f=last_id)
     # get_service_args()
+    # test()
