@@ -106,7 +106,9 @@ def tianyan_crawler(f = 0, limit=999999):
     output_dir = 'result/'
     # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
-    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
+    # brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
+
+
     for line in open('uc_company'):
         if line.strip() == '':
             continue
@@ -126,7 +128,7 @@ def tianyan_crawler(f = 0, limit=999999):
             continue
         if name in black_list:
             continue
-
+        brower = install_new_driver()
         url = "http://www.tianyancha.com/search/%s" % quote(name)
         brower.get(url)
         r = random.uniform(8, 15)
