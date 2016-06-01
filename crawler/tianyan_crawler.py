@@ -68,7 +68,7 @@ init_service_args = [
 def get_service_args():
     check_result = False
     while not check_result:
-        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=10&delay=1&category=2&sortby=time&foreign=none&operator=2&area=北京'
+        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=7&delay=1&category=2&sortby=time&foreign=none&operator=2&area=北京'
         a = requests.get(ip_url)
 
         ip = check_proxy(a)
@@ -86,10 +86,10 @@ def get_service_args():
 def install_new_driver():
     service = get_service_args()
 
-    r = random.randint(0, len(refers))
+    r = random.randint(0, len(refers)-1)
     refer = refers[r]
 
-    u = random.randint(0, len(uas))
+    u = random.randint(0, len(uas)-1)
     ua = uas[u]
 
     dcap["phantomjs.page.customHeaders.Referer"] = refer
@@ -107,7 +107,7 @@ def tianyan_crawler(f = 0, limit=999999):
     # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
     # brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
-
+    brower = install_new_driver()
 
     for line in open('uc_company'):
         if line.strip() == '':
@@ -128,7 +128,7 @@ def tianyan_crawler(f = 0, limit=999999):
             continue
         if name in black_list:
             continue
-        brower = install_new_driver()
+
         url = "http://www.tianyancha.com/search/%s" % quote(name)
         brower.get(url)
         r = random.uniform(8, 15)
