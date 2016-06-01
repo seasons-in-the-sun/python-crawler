@@ -48,22 +48,23 @@ def check_proxy(ip_url):
 
     ips = ip_url.text.strip().split('\n')
     for ip in ips:
+        ip = ip.strip()
         proxies['http'] = ip
         try:
             r  = requests.get('http://www.tianyancha.com', proxies=proxies, timeout = 5)
             if r:
                 return ip
             else:
-                print(proxies['http'] + ' not work')
+                print(ip + ' not work')
                 continue
         except Exception as e:
-            print(proxies['http'] + ' not work')
+            print(ip + ' not work')
             continue
     return ''
 
 
 init_service_args = [
-    '--proxy=123.126.32.102:8080',
+    '--proxy=123.123.151.113:8888',
     '--proxy-type=http',
     ]
 
