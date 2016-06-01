@@ -45,17 +45,21 @@ dcap["phantomjs.page.customHeaders.Referer"] = ("http://www.baidu.com")
 
 def check_proxy(ip_url):
     proxies = {}
-    proxies['http'] = ip_url.text.strip()
-    try:
-        r  = requests.get('http://www.tianyancha.com', proxies=proxies, timeout = 5)
-        if r:
-            return True
-        else:
+
+    ips = ip_url.text.strip().split('\n')
+    for ip in ips:
+        proxies['http'] = ip
+        try:
+            r  = requests.get('http://www.tianyancha.com', proxies=proxies, timeout = 5)
+            if r:
+                return ip
+            else:
+                print(proxies['http'] + ' not work')
+                continue
+        except Exception as e:
             print(proxies['http'] + ' not work')
-            return False
-    except Exception as e:
-        print(proxies['http'] + ' not work')
-        return False
+            continue
+    return ''
 
 
 init_service_args = [
@@ -66,28 +70,20 @@ init_service_args = [
 def get_service_args():
     check_result = False
     while not check_result:
-        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=1&delay=1&category=2&sortby=time&foreign=none&operator=2&area=北京'
+        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=10&delay=1&category=2&sortby=time&foreign=none&operator=2&area=北京'
         a = requests.get(ip_url)
-        check_result = check_proxy(a)
-        time.sleep(2)
 
-    print(a.text)
-    service_args = [
-    '--proxy=%s' % a.text.strip().encode('utf-8'),
+        ip = check_proxy(a)
+        if ip != '':
+            check_result = True
+            print(a.text)
+            service_args = [
+    '--proxy=%s' % ip.encode('utf-8'),
     '--proxy-type=https',
     ]
-    return service_args
-
-headers = {
-    'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    'upgrade-insecure-requests': "1",
-    'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
-    'referer': "http//www.qixin.com/",
-    'accept-encoding': "gzip, deflate, sdch",
-    'accept-language': "zh-CN,zh;q=0.8",
-    'cookie': "aliyungf_tc=AQAAAEtuU04PIAsARc58e8vd5o1au4Gj; gr_user_id=39cda7a3-8cf6-42b2-b9e3-261c97e411d0; connect.sid=s%3A8V8Lij2ThnrxkMccsr9zIm1Cd-M-VXH_.dZprDbSUIPH4LtYoCFvNZSDdOlh26h3aLWiwOvm2GJ4; userKey=QXBAdmin-Web2.0_0AisOgqIcbErH9pytF/d685aPhYR053FnJjfsgjwY2M%3D; userValue=93ad327f-844c-42e0-9bc3-2c88c2f625a0; hide-download-panel=1; _alicdn_sec=573959d5084b61832d6e9d3ac21a1a9079509e43; gr_session_id_955c17a7426f3e98=9db6f66f-c1c8-4a3e-bdbf-208316b65cb0; Hm_lvt_52d64b8d3f6d42a2e416d59635df3f71=1463362155; Hm_lpvt_52d64b8d3f6d42a2e416d59635df3f71=1463376343; _ga=GA1.2.851494096.1463362156; _gat=1",
-    }
-
+            return service_args
+        else:
+            time.sleep(2)
 
 # def install_new_driver(ip_chng_cnt=1):
 #     if ip_chng_cnt % 4 == 0:
