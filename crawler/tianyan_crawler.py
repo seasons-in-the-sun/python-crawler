@@ -35,10 +35,6 @@ uas = [
     "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27"
 ]
 
-
-
-
-
 dcap["phantomjs.page.settings.userAgent"] = (
     "Mozilla/5.0 (compatible; WOW64; MSIE 10.0; Windows NT 6.2)"
 )
@@ -87,36 +83,6 @@ def get_service_args():
         else:
             time.sleep(2)
 
-# def install_new_driver(ip_chng_cnt=1):
-#     if ip_chng_cnt % 4 == 0:
-#         brower = webdriver.PhantomJS(executable_path=phantomjs_path)
-#         brower.delete_all_cookies()
-#         return brower
-#     else:
-#         retry = 1
-#         while True:
-#             service = get_service_args()
-#             brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service, desired_capabilities=dcap)
-#
-#             test_url = 'http://www.tianyancha.com/company/24636152'
-#             brower.get(test_url)
-#
-#             soup = BeautifulSoup(brower.page_source, 'html.parser')
-#             title = soup.title
-#             if title is not None and title.get_text() != '页面载入出错':
-#                 print ("第%s次换代理成功" % retry)
-#                 return brower
-#             else:
-#                 retry += 1
-#                 time.sleep(2)
-#                 if retry > 10:
-#                     print("换了10次代理还不行, 睡一会再说")
-#                     time.sleep(600)
-#                     brower = webdriver.PhantomJS(executable_path=phantomjs_path)
-#                     brower.delete_all_cookies()
-#                     return brower
-
-
 def install_new_driver():
     service = get_service_args()
 
@@ -140,7 +106,6 @@ def tianyan_crawler(f = 0, limit=999999):
     output_dir = 'result/'
     # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
-    ip_change_cnt = 0
     brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
     for line in open('uc_company'):
         if line.strip() == '':
@@ -157,8 +122,6 @@ def tianyan_crawler(f = 0, limit=999999):
         id = segs[0]
         name = segs[1].strip()
         output = output_dir + id + ".html"
-
-
         if os.path.isfile(output):
             continue
         if name in black_list:
@@ -173,7 +136,6 @@ def tianyan_crawler(f = 0, limit=999999):
 
         whole_text = soup.body.get_text()
         if '为确认本次访问为正常用户行为' in whole_text or '403 Forbidden' in whole_text: #触发验证
-            ip_change_cnt += 1
             brower.quit()
             brower = install_new_driver()
             time.sleep(5)
@@ -185,7 +147,7 @@ def tianyan_crawler(f = 0, limit=999999):
         links = soup.body.find_all('a', {'class':'query_name'})
         if links is None or len(links) < 1:
             print("%dth, %s not find" % (i, name))
-            print whole_text.strip()
+            # print whole_text.strip()
             continue
         href = links[0].get('href')
         detail_url = "http://tianyancha.com" + href
@@ -195,7 +157,7 @@ def tianyan_crawler(f = 0, limit=999999):
         r = random.uniform(15, 35)
 
         time.sleep(r)
-        print(id, name, i, r)
+        print("%d, %s, %d, %s" % (id, name, i, r))
 
         text = brower.page_source
         aaa = open(output, mode='w')
