@@ -181,6 +181,7 @@ def tianyan_crawler(f = 0, limit=999999):
         links = soup.body.find_all('a', {'class':'query_name'})
         if links is None or len(links) < 1:
             print("%dth, %s not find" % (i, name))
+            print whole_text
             continue
         href = links[0].get('href')
         detail_url = "http://tianyancha.com" + href
