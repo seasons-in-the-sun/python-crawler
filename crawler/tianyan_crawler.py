@@ -22,16 +22,32 @@ id_log = 'id_log.txt'
 
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 
+refers = ["http://www.baidu.com", "http://www.google.com", "http://cn.bing.com", "www.so.com"]
+uas = [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:21.0) Gecko/20130331 Firefox/21.0",
+    "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Ubuntu/11.10 Chromium/27.0.1453.93 Chrome/27.0.1453.93 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.94 Safari/537.36",
+    "Mozilla/5.0 (compatible; WOW64; MSIE 10.0; Windows NT 6.2)",
+    "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27"
+]
+
+
+
+
+
 dcap["phantomjs.page.settings.userAgent"] = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
 )
-
+dcap["phantomjs.page.customHeaders.Referer"] = ("http://www.baidu.com")
 
 def check_proxy(ip_url):
     proxies = {}
     proxies['http'] = ip_url.text.strip()
     try:
-        r  = requests.get('http://www.baidu.com', proxies=proxies, timeout = 5)
+        r  = requests.get('http://www.tianyancha.com', proxies=proxies, timeout = 5)
         if r:
             return True
         else:
@@ -40,7 +56,10 @@ def check_proxy(ip_url):
         return False
 
 
-
+init_service_args = [
+    '--proxy=123.126.32.102:8080',
+    '--proxy-type=http',
+    ]
 
 def get_service_args():
     check_result = False
@@ -100,6 +119,17 @@ headers = {
 
 def install_new_driver():
     service = get_service_args()
+
+    r = random.randint(0, len(refers))
+    refer = refers[r]
+
+    u = random.randint(0, len(uas))
+    ua = uas[u]
+
+    dcap["phantomjs.page.customHeaders.Referer"] = refer
+    dcap["phantomjs.page.settings.userAgent"] = ua
+
+
     brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=service, desired_capabilities=dcap)
     return brower
 
@@ -111,7 +141,7 @@ def tianyan_crawler(f = 0, limit=999999):
     # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
     ip_change_cnt = 0
-    brower = install_new_driver()
+    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
     for line in open('uc_company'):
         if line.strip() == '':
             continue
@@ -159,6 +189,7 @@ def tianyan_crawler(f = 0, limit=999999):
 
         brower.get(detail_url)
         r = random.uniform(15, 35)
+
         time.sleep(r)
         print(i, r)
 
@@ -188,3 +219,4 @@ if __name__ == '__main__':
         last_id = 0
     print last_id
     tianyan_crawler(f=last_id)
+    # get_service_args()
