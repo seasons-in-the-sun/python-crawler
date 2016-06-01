@@ -174,7 +174,7 @@ def tianyan_crawler(f = 0, limit=999999):
         if '为确认本次访问为正常用户行为' in whole_text or '403 Forbidden' in whole_text: #触发验证
             ip_change_cnt += 1
             brower.quit()
-            brower = install_new_driver(ip_change_cnt)
+            brower = install_new_driver()
             time.sleep(5)
             brower.get(url)
             soup = BeautifulSoup(brower.page_source, 'html.parser')
