@@ -18,7 +18,7 @@ __author__ = 'Spirit'
 
 # brower = webdriver.Firefox()
 phantomjs_path = '/usr/local/bin/phantomjs'
-# phantomjs_path = '/server/phantomjs-2.1.1-macosx/bin/phantomjs'
+phantomjs_path = '/server/phantomjs-2.1.1-macosx/bin/phantomjs'
 id_log = 'id_log.txt'
 
 dcap = dict(DesiredCapabilities.PHANTOMJS)
@@ -48,7 +48,7 @@ def check_proxy(ip_url):
         ip = ip.strip()
         proxies['http'] = ip
         try:
-            r  = requests.get('http://www.tianyancha.com', proxies=proxies, timeout = 5)
+            r  = requests.get('http://www.tianyancha.com', proxies=proxies, timeout = 2)
             if r:
                 return ip
             else:
@@ -61,8 +61,8 @@ def check_proxy(ip_url):
 
 
 init_service_args = [
-    '--proxy=61.149.36.192:8888',
-    '--proxy-type=http',
+    # '--proxy=61.149.36.192:8888',
+    # '--proxy-type=http',
     ]
 
 def get_service_args():
@@ -106,8 +106,8 @@ def tianyan_crawler(f = 0, limit=999999):
     output_dir = 'result/'
     # brower = webdriver.PhantomJS(executable_path=phantomjs_path)
     i = 0
-    # brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
-    brower = install_new_driver()
+    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
+    # brower = install_new_driver()
 
     for line in open('uc_company'):
         if line.strip() == '':
@@ -181,21 +181,30 @@ def get_all_links(hrefs):
     return result
 
 def test():
+
+    sa = [
+    '--proxy=221.223.112.76:8888',
+    '--proxy-type=http',
+    ]
+
     name = '法布雷加斯'
+    name = '微企汇'
     url = "http://tianyancha.com/search/%s" % quote(name)
     # print(url)
     # return
     # http://www.tianyancha.com/search/%E5%BE%AE%E4%BC%81%E6%B1%87
     # http://tianyancha.com/search/%E5%BE%AE%E4%BC%81%E6%B1%87
-    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=init_service_args, desired_capabilities=dcap)
+    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=sa, desired_capabilities=dcap)
+    brower.delete_all_cookies()
 
-
+    url = 'http://www.tianyancha.com/company/2324350119'
     brower.get(url)
+    print(brower.execute_script('var _paq=_paq||[];_paq.push(["trackPageView"]);_paq.push(["enableLinkTracking",!0]);!function(){var e="//tj.tianyancha.com/piwik/";_paq.push(["setTrackerUrl",e+"piwik.php"]);_paq.push(["setSiteId",1]);var a=document,p=a.createElement("script"),t=a.getElementsByTagName("script")[0];p.type="text/javascript";p.async=!0;p.defer=!0;p.src=e+"piwik.js";t.parentNode.insertBefore(p,t)}();'))
     soup = BeautifulSoup(brower.page_source, 'html.parser')
     whole_text = soup.body.get_text()
 
-
-    print(whole_text.strip())
+    print(brower.page_source)
+    # print(whole_text.strip())
     brower.quit()
 
 if __name__ == '__main__':
