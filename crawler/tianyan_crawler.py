@@ -65,7 +65,7 @@ def check_proxy(ip_url):
 
 
 init_service_args = [
-    '--proxy=123.123.151.113:8888',
+    '--proxy=61.149.36.192:8888',
     '--proxy-type=http',
     ]
 
