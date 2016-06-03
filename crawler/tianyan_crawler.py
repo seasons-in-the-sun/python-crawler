@@ -12,13 +12,16 @@ import time
 import random
 import os
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import requests
 
 __author__ = 'Spirit'
 
 # brower = webdriver.Firefox()
 phantomjs_path = '/usr/local/bin/phantomjs'
-phantomjs_path = '/server/phantomjs-2.1.1-macosx/bin/phantomjs'
+# phantomjs_path = '/server/phantomjs-2.1.1-macosx/bin/phantomjs'
 id_log = 'id_log.txt'
 
 dcap = dict(DesiredCapabilities.PHANTOMJS)
@@ -61,14 +64,14 @@ def check_proxy(ip_url):
 
 
 init_service_args = [
-    # '--proxy=61.149.36.192:8888',
-    # '--proxy-type=http',
+    '--proxy=114.254.7.25:8888',
+    '--proxy-type=http',
     ]
 
 def get_service_args():
     check_result = False
     while not check_result:
-        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=7&delay=1&category=2&sortby=time&foreign=none&operator=2&area=北京'
+        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=10&delay=1&area=%E5%8C%97%E4%BA%AC,%20%E5%A4%A9%E6%B4%A5,%20%E6%B2%B3%E5%8C%97,%20%E8%BE%BD%E5%AE%81&foreign=none&exclude_ports=80&filter=on'
         a = requests.get(ip_url)
 
         ip = check_proxy(a)
@@ -100,7 +103,7 @@ def install_new_driver():
     return brower
 
 
-black_list = ["无", "测试", "个人"]
+black_list = ["无", "测试", "个人", "正和岛"]
 
 def tianyan_crawler(f = 0, limit=999999):
     output_dir = 'result/'
@@ -159,7 +162,7 @@ def tianyan_crawler(f = 0, limit=999999):
         r = random.uniform(15, 35)
 
         time.sleep(r)
-        print("%d, %s, %d, %s" % (id, name, i, r))
+        print("%s, %s, %d, %s" % (id, name, i, r))
 
         text = brower.page_source
         aaa = open(output, mode='w')
@@ -183,7 +186,7 @@ def get_all_links(hrefs):
 def test():
 
     sa = [
-    '--proxy=221.223.112.76:8888',
+    '--proxy=123.126.32.102:8080',
     '--proxy-type=http',
     ]
 
@@ -198,14 +201,27 @@ def test():
     brower.delete_all_cookies()
 
     url = 'http://www.tianyancha.com/company/2324350119'
+    # url = 'http://comment.news.163.com/news_shehui7_bbs/BOCF3B3M00011229.html'
     brower.get(url)
-    print(brower.execute_script('var _paq=_paq||[];_paq.push(["trackPageView"]);_paq.push(["enableLinkTracking",!0]);!function(){var e="//tj.tianyancha.com/piwik/";_paq.push(["setTrackerUrl",e+"piwik.php"]);_paq.push(["setSiteId",1]);var a=document,p=a.createElement("script"),t=a.getElementsByTagName("script")[0];p.type="text/javascript";p.async=!0;p.defer=!0;p.src=e+"piwik.js";t.parentNode.insertBefore(p,t)}();'))
-    soup = BeautifulSoup(brower.page_source, 'html.parser')
-    whole_text = soup.body.get_text()
 
-    print(brower.page_source)
-    # print(whole_text.strip())
-    brower.quit()
+    try:
+        # e = WebDriverWait(brower, 30).until(
+        #     EC.title_contains('信用信息')
+        # )
+        # print(e)
+
+
+
+        # print(brower.execute_script('var _paq=_paq||[];_paq.push(["trackPageView"]);_paq.push(["enableLinkTracking",!0]);!function(){var e="//tj.tianyancha.com/piwik/";_paq.push(["setTrackerUrl",e+"piwik.php"]);_paq.push(["setSiteId",1]);var a=document,p=a.createElement("script"),t=a.getElementsByTagName("script")[0];p.type="text/javascript";p.async=!0;p.defer=!0;p.src=e+"piwik.js";t.parentNode.insertBefore(p,t)}();'))
+        soup = BeautifulSoup(brower.page_source, 'html.parser')
+        whole_text = soup.body.get_text()
+
+        print(brower.page_source)
+        # print(whole_text.strip())
+
+    finally:
+        # print("time out")
+        brower.quit()
 
 if __name__ == '__main__':
     if os.path.isfile(id_log):
@@ -214,5 +230,5 @@ if __name__ == '__main__':
         last_id = 0
     print last_id
     tianyan_crawler(f=last_id)
-    # get_service_args()
+    # # get_service_args()
     # test()
