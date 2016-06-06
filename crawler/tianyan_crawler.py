@@ -3,7 +3,6 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import sys
-import pickle
 reload(sys)
 sys.setdefaultencoding('utf-8')
 from urllib import quote
@@ -43,6 +42,7 @@ dcap["phantomjs.page.settings.userAgent"] = (
 )
 dcap["phantomjs.page.customHeaders.Referer"] = ("http://www.baidu.com")
 
+
 def check_proxy(ip_url):
     proxies = {}
 
@@ -64,8 +64,8 @@ def check_proxy(ip_url):
 
 
 init_service_args = [
-    '--proxy=114.254.7.25:8888',
-    '--proxy-type=http',
+    # '--proxy=114.254.7.25:8888',
+    # '--proxy-type=http',
     ]
 
 def get_service_args():
@@ -186,35 +186,28 @@ def get_all_links(hrefs):
 def test():
 
     sa = [
-    '--proxy=123.126.32.102:8080',
+    '--proxy=218.240.23.14:8888',
     '--proxy-type=http',
     ]
 
-    name = '法布雷加斯'
-    name = '微企汇'
-    url = "http://tianyancha.com/search/%s" % quote(name)
-    # print(url)
-    # return
-    # http://www.tianyancha.com/search/%E5%BE%AE%E4%BC%81%E6%B1%87
-    # http://tianyancha.com/search/%E5%BE%AE%E4%BC%81%E6%B1%87
-    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=sa, desired_capabilities=dcap)
-    brower.delete_all_cookies()
 
+    dcap["phantomjs.page.customHeaders.X-Forwarded-for"] = '218.240.23.14'
+    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=sa, desired_capabilities=dcap)
+    # brower.maximize_window()
+    # brower.delete_all_cookies()
     url = 'http://www.tianyancha.com/company/2324350119'
+
+    # url = 'http://www.tianyancha.com/tongji/2324350119.json?random=%d' % (time.time() * 1000)
+    print(url)
     # url = 'http://comment.news.163.com/news_shehui7_bbs/BOCF3B3M00011229.html'
     brower.get(url)
+    time.sleep(10)
 
     try:
-        # e = WebDriverWait(brower, 30).until(
-        #     EC.title_contains('信用信息')
-        # )
-        # print(e)
 
+        # soup = BeautifulSoup(brower.page_source, 'html.parser')
 
-
-        # print(brower.execute_script('var _paq=_paq||[];_paq.push(["trackPageView"]);_paq.push(["enableLinkTracking",!0]);!function(){var e="//tj.tianyancha.com/piwik/";_paq.push(["setTrackerUrl",e+"piwik.php"]);_paq.push(["setSiteId",1]);var a=document,p=a.createElement("script"),t=a.getElementsByTagName("script")[0];p.type="text/javascript";p.async=!0;p.defer=!0;p.src=e+"piwik.js";t.parentNode.insertBefore(p,t)}();'))
-        soup = BeautifulSoup(brower.page_source, 'html.parser')
-        whole_text = soup.body.get_text()
+            # brower.execute_script(s.get_text())
 
         print(brower.page_source)
         # print(whole_text.strip())
