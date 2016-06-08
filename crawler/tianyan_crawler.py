@@ -81,6 +81,8 @@ def get_service_args():
             service_args = [
     '--proxy=%s' % ip.encode('utf-8'),
     '--proxy-type=https',
+    '--ignore-ssl-errors=true',
+    '--ssl-protocol=any'
     ]
             return service_args
         else:
