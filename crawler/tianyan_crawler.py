@@ -38,9 +38,9 @@ uas = [
 ]
 
 dcap["phantomjs.page.settings.userAgent"] = (
-    "Mozilla/5.0 (compatible; WOW64; MSIE 10.0; Windows NT 6.2)"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
 )
-dcap["phantomjs.page.customHeaders.Referer"] = ("http://www.baidu.com")
+# dcap["phantomjs.page.customHeaders.Referer"] = ("http://www.baidu.com")
 
 
 def check_proxy(ip_url):
@@ -71,7 +71,7 @@ init_service_args = [
 def get_service_args():
     check_result = False
     while not check_result:
-        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=10&delay=1&area=%E5%8C%97%E4%BA%AC,%20%E5%A4%A9%E6%B4%A5,%20%E6%B2%B3%E5%8C%97,%20%E8%BE%BD%E5%AE%81&foreign=none&exclude_ports=80&filter=on'
+        ip_url = 'http://qsrdk.daili666api.com/ip/?tid=559862848858892&num=5&delay=1&foreign=none&ports=80&filter=on'
         a = requests.get(ip_url)
 
         ip = check_proxy(a)
@@ -186,19 +186,22 @@ def get_all_links(hrefs):
 def test():
 
     sa = [
-    '--proxy=218.240.23.14:8888',
+    # '--proxy=123.116.66.66:8888',
+    '--proxy=221.224.163.28:80',
     '--proxy-type=http',
+    '--ignore-ssl-errors=true', '--ssl-protocol=any'
     ]
 
 
-    dcap["phantomjs.page.customHeaders.X-Forwarded-for"] = '218.240.23.14'
-    brower = webdriver.PhantomJS(executable_path=phantomjs_path, service_args=sa, desired_capabilities=dcap)
+    # dcap["phantomjs.page.customHeaders.X-Forwarded-for"] = '218.240.23.14'
+    brower = webdriver.PhantomJS(executable_path=phantomjs_path, desired_capabilities=dcap)
+    brower.delete_all_cookies()
     # brower.maximize_window()
     # brower.delete_all_cookies()
     url = 'http://www.tianyancha.com/company/2324350119'
+    url = 'http://tianyancha.com/search/zheng'
 
     # url = 'http://www.tianyancha.com/tongji/2324350119.json?random=%d' % (time.time() * 1000)
-    print(url)
     # url = 'http://comment.news.163.com/news_shehui7_bbs/BOCF3B3M00011229.html'
     brower.get(url)
     time.sleep(10)
@@ -208,6 +211,7 @@ def test():
         # soup = BeautifulSoup(brower.page_source, 'html.parser')
 
             # brower.execute_script(s.get_text())
+        brower.save_screenshot('a.png')
 
         print(brower.page_source)
         # print(whole_text.strip())
