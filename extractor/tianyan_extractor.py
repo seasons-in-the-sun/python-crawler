@@ -32,11 +32,9 @@ def parse(soup, com_id):
     try:
         last_update = soup.find('span', {'ng-if':'company.updateTime'})
         if last_update is not None:
-            result['last_update'] = last_update.get_text().split('/')[1]
+            result['last_update'] = last_update.get_text().strip().split('/')[1]
 
         company_info = soup.find('div', {'class':'company_info_text'})
-
-
 
 
         company_info_dict = parse_company_info(company_info)
