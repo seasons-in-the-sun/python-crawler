@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 __author__ = 'Spirit'
 import MySQLdb
-import psycopg2
 from pymongo import MongoClient
 
 #test configuration
@@ -19,12 +18,12 @@ MONGO_PASS = 'big_0601'
 MONGO_PORT = 27017
 
 
-def get_pq_client():
-    try:
-        return psycopg2.connect(host=HOST, port=PORT, database=DATABASE, user=USER, password=PASSWD)
-    except Exception as e:
-        print e
-        return None
+# def get_pq_client():
+#     try:
+#         return psycopg2.connect(host=HOST, port=PORT, database=DATABASE, user=USER, password=PASSWD)
+#     except Exception as e:
+#         print e
+#         return None
 
 
 def get_mysql_client(host=HOST, port=PORT, database=DATABASE, user=USER, passwd=PASSWD):
