@@ -4,6 +4,9 @@ from bs4 import BeautifulSoup
 import json
 import simplejson
 from os import listdir
+import os
+import sys
+sys.path.append(os.getcwd())
 from config.config import get_mongo_client
 import traceback
 import urllib
