@@ -17,7 +17,7 @@ def export_to_mongo(path):
     db = mongo.test
     donghao = db.donghao
     files = [f for f in listdir(path)]
-    for f, idx in enumerate(files):
+    for idx, f in enumerate(files):
         if idx % 100 == 0:
             print idx
         result = {}
