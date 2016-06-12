@@ -17,7 +17,9 @@ def export_to_mongo(path):
     db = mongo.test
     donghao = db.donghao
     files = [f for f in listdir(path)]
-    for f in files:
+    for f, idx in enumerate(files):
+        if idx % 100 == 0:
+            print idx
         result = {}
         abs_path = path + '/' + f
         # print(abs_path)
@@ -86,11 +88,11 @@ def parse_company_info(company_info):
         text = contact.get_text().strip().encode('utf-8').replace('：', '')
         if '电话' in text:
             phone = text.replace('电话:', '').strip()
-            print(phone)
+            # print(phone)
             company_info_dict['phone'] = phone
         elif '邮箱' in text:
             email = text.replace('邮箱:', '').strip()
-            print(email)
+            # print(email)
             company_info_dict['email'] = email
         elif '网址' in text:
             url = text.replace('网址:', '').strip()
