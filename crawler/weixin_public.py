@@ -26,7 +26,7 @@ dcap["phantomjs.page.settings.userAgent"] = (
 )
 base_url = 'http://mp.weixin.qq.com'
 # base_dir = '/Users/Spirit/weixin_public/'
-base_dir = '/home/Spirit/weixin_public'
+base_dir = '/home/Spirit/weixin_public/'
 
 #待爬取公众号列表
 public_name_path = 'weixin.txt'
