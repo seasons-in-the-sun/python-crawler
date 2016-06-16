@@ -18,18 +18,19 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
-# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
 )
 base_url = 'http://mp.weixin.qq.com'
-# base_dir = '/Users/Spirit/weixin_public/'
-base_dir = '/home/Spirit/weixin_public/'
+base_dir = '/Users/Spirit/weixin_public/'
+# base_dir = '/home/Spirit/weixin_public/'
 
 #待爬取公众号列表
-public_name_path = 'weixin.txt'
+public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
+# public_name_path = 'weixin.txt'
 
 
 
@@ -57,7 +58,7 @@ def crawl():
     cur = conn.cursor()
     count = 0
     for public_name in open(public_name_path):
-        public_name = public_name.strip()
+        public_name = public_name.strip().encode('utf-8')
         path = base_dir + str(count)
         count = count + 1
         if not os.path.exists(path):
@@ -116,20 +117,22 @@ def crawl():
             if artical_soup.find('script', {'id':'voice_tpl'}) is not None:
                 artical_soup.find('script', {'id':'voice_tpl'}).extract()
 
-            raw_html = MySQLdb.escape_string(str(artical_soup))
+            raw_html = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
             sql = "insert into weixin_public (name, title, date, raw_html) values ('%s', '%s', '%s', '%s')" \
                   % (public_name, title, date, raw_html)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             cur.execute(sql)
-            output_file = open(path + '/' + str(idx) + '.html', mode='w')
+            output_file = open(path + '/' + title + '.html', mode='w')
             output_file.write(str(artical_soup))
             output_file.close()
             print("%s done" % (title))
         print("%s has done" % public_name)
 
 
+
         driver.quit()
         conn.commit()
+        break
     cur.close()
     conn.close()
 
