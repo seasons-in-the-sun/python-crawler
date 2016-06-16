@@ -36,7 +36,7 @@ public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
 
 
 pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
-                passwd='akQq5csSXI5Fsmbx5U4c', db='zhisland_base', port=3306)
+                passwd='akQq5csSXI5Fsmbx5U4c', db='zhisland_base', port=3306, charset='utf8')
 
 headers = {
     'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
