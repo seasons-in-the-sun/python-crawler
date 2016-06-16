@@ -9,6 +9,7 @@ from urllib import quote
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 import re
+import hashlib
 
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
@@ -122,7 +123,7 @@ def crawl():
                   % (public_name, title, date, raw_html)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             cur.execute(sql)
-            output_file = open(path + '/' + title + '.html', mode='w')
+            output_file = open(path + '/' + str(hashlib.sha1(title).digest()) + '.html', mode='w')
             output_file.write(str(artical_soup))
             output_file.close()
             print("%s done" % (title))
