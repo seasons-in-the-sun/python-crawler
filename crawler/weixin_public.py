@@ -124,6 +124,7 @@ def crawl():
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             cur.execute(sql)
             md5 = hashlib.md5(title).digest()
+            print("%s, %s" % (title, md5))
             output_file = open(path + '/' + md5 + '.html', mode='w')
             output_file.write(str(artical_soup))
             output_file.close()
