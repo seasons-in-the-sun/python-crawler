@@ -133,7 +133,6 @@ def crawl():
 
         driver.quit()
         conn.commit()
-        break
     cur.close()
     conn.close()
 
