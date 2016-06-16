@@ -65,14 +65,14 @@ def crawl():
         #根据公众号名称搜索, 得到列表
         url = 'http://weixin.sogou.com/weixin?type=1&query=%s&ie=utf8&_sug_=n&_sug_type_=' % quote(public_name)
         r = requests.get(url, headers = headers)
-        soup = BeautifulSoup(r.text)
+        soup = BeautifulSoup(r.text, 'html.parser')
         public_link = soup.find('div', {'target':'_blank', 'href':True}).get('href')
 
         time.sleep(random.uniform(3, 5))
         driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
         driver.get(public_link)
         time.sleep(random.uniform(5, 10))
-        soup2 = BeautifulSoup(driver.page_source)
+        soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
         #得到近期的文章列表
         href_list = []
@@ -96,7 +96,7 @@ def crawl():
 
 
 
-            artical_soup = BeautifulSoup(driver.page_source)
+            artical_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
             #format
             #去掉"微信扫一扫"
