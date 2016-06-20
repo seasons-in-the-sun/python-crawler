@@ -7,9 +7,7 @@ import random
 from selenium import webdriver
 from urllib import quote
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
-import re
-import hashlib
+import bs4
 
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
@@ -19,7 +17,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
-phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -112,18 +110,63 @@ def crawl():
                 [x.extract() for x in artical_soup.find_all('div', class_='rich_media_area_extra')]
             if artical_soup.find('div', class_='rich_media_tool') is not None:
                 [x.extract() for x in artical_soup.find_all('div', class_='rich_media_tool')]
+
+            #对图片的修改
+            if artical_soup.find_all('img', {'data-src':True, 'src':True}) is not None:
+                for e in artical_soup.find_all('img', {'data-src':True, 'src':True}):
+                    data_src = e.get('data-src')
+                    e.attrs['src'] = data_src
+
+
             #底部的qq音乐之类
             if artical_soup.find('script', {'id':'qqmusic_tpl'}) is not None:
                 artical_soup.find('script', {'id':'qqmusic_tpl'}).extract()
             if artical_soup.find('script', {'id':'voice_tpl'}) is not None:
                 artical_soup.find('script', {'id':'voice_tpl'}).extract()
 
+
+            #针对一些特定微信号的处理
+            if count == 4: #占豪
+                removes = []
+                a = artical_soup.find('section', {'style':'white-space: normal; font-family: 微软雅黑; line-height: 28.4444px; box-sizing: border-box; border: 0px none;'})
+                for es in a.next_elements:
+                    if type(es) == bs4.element.Tag:
+                        removes.append(es)
+                for es in removes:
+                    es.extract()
+                a.extract()
+                # a = artical_soup.find('span', text='淘宝特约店址：http://goldengame.taobao.com [长按复制]')
+                # a.extract()
+            elif count == 5: #深蓝财经网
+                removes = []
+                a = artical_soup.find('p',
+                {'style':'max-width: 100%; min-height: 1em; color: rgb(62, 62, 62); line-height: 25.6000003814697px; background-color: rgb(255, 255, 255); box-sizing: border-box !important; word-wrap: break-word !important;'})
+                for es in a.next_elements:
+                    if type(es) == bs4.element.Tag:
+                        removes.append(es)
+                for es in removes:
+                    es.extract()
+                a.extract()
+            elif count == 6: #新财富杂志
+                gifs = artical_soup.find_all('img', {'data-type':'gif'})
+                if len(gifs) > 2:
+                    total_gifs = len(gifs)
+                    gifs[0].extract()
+                    gifs[total_gifs-1].extract()
+
+            elif count == 7:
+                pass
+            elif count == 8: #扑克投资家
+                pass
+
+
             raw_html = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
             sql = "insert into weixin_public (name, title, date, raw_html) values ('%s', '%s', '%s', '%s')" \
                   % (public_name, title, date, raw_html)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             cur.execute(sql)
-            output_file = open(path + '/' + str(title.__hash__()) + '.html', mode='w')
+            hash = abs(title.__hash__())
+            output_file = open(path + '/' + str(hash) + '.html', mode='w')
             output_file.write(str(artical_soup))
             output_file.close()
             print("%s done" % (title))
@@ -137,9 +180,20 @@ def crawl():
     conn.close()
 
 
+def test():
+    # driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
+    # driver.get('http://chuansong.me/n/368123242350')
+    # print(driver.page_source)
+    soup = BeautifulSoup(open('/Users/Spirit/Downloads/weixin_public/4/3529359857817564937.html'))
+    a = soup.find('span', text='淘宝特约店址：http://goldengame.taobao.com [长按复制]')
+    a.extract()
+    print(soup)
+
+    # driver.quit()
+
 if __name__ == '__main__':
     crawl()
-
+    # test()
 
 
 
