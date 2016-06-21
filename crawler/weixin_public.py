@@ -87,7 +87,7 @@ def crawl():
             continue
 
         for idx, href in enumerate(hrefs):
-            title = hrefs.get_text().strip().encode('utf-8')
+            title = href.get_text().strip().encode('utf-8')
             if has_crawled(public_name, title, cur):
                 continue
 
