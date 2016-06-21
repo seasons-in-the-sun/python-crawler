@@ -129,13 +129,13 @@ def crawl():
             if count == 4: #占豪
                 removes = []
                 a = artical_soup.find('section', {'style':'white-space: normal; font-family: 微软雅黑; line-height: 28.4444px; box-sizing: border-box; border: 0px none;'})
-                if a.next_elements is not None:
+                if a is not None and a.next_elements is not None:
                     for es in a.next_elements:
                         if type(es) == bs4.element.Tag:
                             removes.append(es)
                     for es in removes:
                         es.extract()
-                a.extract()
+                    a.extract()
                 # a = artical_soup.find('span', text='淘宝特约店址：http://goldengame.taobao.com [长按复制]')
                 # a.extract()
             elif count == 5: #深蓝财经网
