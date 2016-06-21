@@ -8,6 +8,7 @@ from selenium import webdriver
 from urllib import quote
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import bs4
+import cssutils
 
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
@@ -140,14 +141,22 @@ def crawl():
                 # a.extract()
             elif count == 5: #深蓝财经网
                 removes = []
-                a = artical_soup.find('p',
-                {'style':'max-width: 100%; min-height: 1em; color: rgb(62, 62, 62); line-height: 25.6000003814697px; background-color: rgb(255, 255, 255); box-sizing: border-box !important; word-wrap: break-word !important;'})
-                for es in a.next_elements:
-                    if type(es) == bs4.element.Tag:
-                        removes.append(es)
-                for es in removes:
-                    es.extract()
-                a.extract()
+                a = artical_soup.find('span', text='深蓝财经网 微信号：shenlancaijing').parent.parent.parent
+                if a is not None:
+                    for es in a.next_elements:
+                        if type(es) == bs4.element.Tag:
+                            removes.append(es)
+                    for es in removes:
+                        es.extract()
+                    a.extract()
+                # a = artical_soup.find('p',
+                # {'style':'max-width: 100%; min-height: 1em; color: rgb(62, 62, 62); line-height: 25.6000003814697px; background-color: rgb(255, 255, 255); box-sizing: border-box !important; word-wrap: break-word !important;'})
+                # for es in a.next_elements:
+                #     if type(es) == bs4.element.Tag:
+                #         removes.append(es)
+                # for es in removes:
+                #     es.extract()
+                # a.extract()
             elif count == 6: #新财富杂志
                 gifs = artical_soup.find_all('img', {'data-type':'gif'})
                 if len(gifs) > 2:
@@ -182,15 +191,28 @@ def crawl():
 
 
 def test():
-    # driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
-    # driver.get('http://chuansong.me/n/368123242350')
+    driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
+    driver.get('http://mp.weixin.qq.com/s?timestamp=1466476626&src=3&ver=1&signature=z68MUxylDvqvgdXBhHCDPHmiFMOMUO7MZA7VK2JKcV7yODVmNZbW9YvM8rHk9FEmizF0DlEwCowGG9S7DwpvDSbSNfT8c3JRP2NqP7CitapdQWRZN6hHUYs-7uIl-7QoJqQiI03*Kw2-epnJB-bjxYbSTZ8PxxwL*uZL1-*qEmc=')
     # print(driver.page_source)
-    soup = BeautifulSoup(open('/Users/Spirit/Downloads/weixin_public/4/3529359857817564937.html'))
-    a = soup.find('span', text='淘宝特约店址：http://goldengame.taobao.com [长按复制]')
-    a.extract()
-    print(soup)
+    soup = BeautifulSoup(driver.page_source)
+    a = soup.select('p[style*=max-width]')
+    # a = soup.find('p', {'style':True})
+    for aa in a:
+        print(aa)
+    style = a[0]['style']
+    s = cssutils.parseStyle(style)
+    print(s['max-width'])
+    print s['color']
+    print s.keys()
+    print(type(s))
 
-    # driver.quit()
+
+    # soup = BeautifulSoup(open('/Users/Spirit/Downloads/weixin_public/4/3529359857817564937.html'))
+    # a = soup.find('span', text='淘宝特约店址：http://goldengame.taobao.com [长按复制]')
+    # a.extract()
+    # print(soup)
+
+    driver.quit()
 
 if __name__ == '__main__':
     crawl()
