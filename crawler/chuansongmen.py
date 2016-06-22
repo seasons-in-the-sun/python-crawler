@@ -44,7 +44,7 @@ def go():
     for csm in result:
         link = csm.link
         r = requests.get(link, headers = headers)
-        soup = BeautifulSoup(r.text)
+        soup = BeautifulSoup(r.text, 'html.parser')
         aa = soup.find('span', {'style':'font-size: 1em;font-weight: bold'})
         max_page = int(aa.find_all('a')[-1].get_text())
         # print(aa[-1])
@@ -66,7 +66,7 @@ def crawl_single(csm, max_page):
         start = 12 * (i-1)
         url = csm.link + '?start=' + str(start)
         r = requests.get(url, headers = headers)
-        list_soup = BeautifulSoup(r.text)
+        list_soup = BeautifulSoup(r.text, 'html.parser')
         links = list_soup.find_all('a', {'href':True, 'target':'_blank'})
         for link in links:
             href = link.get('href')
@@ -80,7 +80,7 @@ def crawl_single(csm, max_page):
     for idx, l in enumerate(link_list):
         url = 'http://chuansong.me' + l
         a = requests.get(url, headers=headers)
-        soup = BeautifulSoup(a.text)
+        soup = BeautifulSoup(a.text, 'html.parser')
         text = soup.select('div#js_content')[0].get_text()
         output_file = open(dir + '/' + str(idx) + '.txt', mode='w')
         output_file.write(text)
