@@ -16,7 +16,7 @@ headers = {
 }
 
 base_dir = '/Users/Spirit/csm/'
-base_dir = '~/csm/'
+base_dir = '/home/Spirit/csm/'
 
 class Chuansongmen:
     def __init__(self, line):
