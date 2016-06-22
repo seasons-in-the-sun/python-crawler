@@ -2,6 +2,7 @@
 
 import sys
 reload(sys)
+sys.setdefaultencoding('utf-8')
 import time
 import requests
 import os
@@ -81,7 +82,7 @@ def crawl_single(csm, max_page):
         url = 'http://chuansong.me' + l
         a = requests.get(url, headers=headers)
         soup = BeautifulSoup(a.text, 'html.parser')
-        text = soup.select('div#js_content')[0].get_text()
+        text = soup.select('div#js_content')[0].get_text().encode('utf-8')
         output_file = open(dir + '/' + str(idx) + '.txt', mode='w')
         output_file.write(text)
         output_file.close()
