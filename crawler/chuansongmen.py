@@ -79,12 +79,15 @@ def crawl_single(csm, max_page):
 
 
     for idx, l in enumerate(link_list):
+        p = dir + '/' + str(idx) + '.txt'
+        if os.path.exists(p):
+            continue
         url = 'http://chuansong.me' + l
-        a = requests.get(url, headers=headers)
-        soup = BeautifulSoup(a.text, 'html.parser')
         try:
+            a = requests.get(url, headers=headers)
+            soup = BeautifulSoup(a.text, 'html.parser')
             text = soup.select('div#js_content')[0].get_text().encode('utf-8')
-            output_file = open(dir + '/' + str(idx) + '.txt', mode='w')
+            output_file = open(p, mode='w')
             output_file.write(text)
             output_file.close()
             time.sleep(3)
