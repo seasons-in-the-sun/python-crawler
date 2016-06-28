@@ -98,7 +98,9 @@ def crawl():
 
 
 
-            artical_soup = BeautifulSoup(driver.page_source, 'html.parser')
+            a_soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+            artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
 
             #format
             #去掉"微信扫一扫"
@@ -234,6 +236,33 @@ def crawl():
     conn.close()
 
 
+def update_rawhtml():
+    conn = pool.connection()
+    cur = conn.cursor()
+    sql = "select name, title, date, raw_html from weixin_public"
+    cur.execute(sql)
+    result = cur.fetchall()
+
+    for i in result:
+        name = i[0]
+        title = i[1]
+        date = i[2]
+        soup = BeautifulSoup(i[3])
+        artical_soup = soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
+        new_html = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
+
+        sql = "update weixin_public set raw_html='%s' where name='%s' and title='%s' and date='%s'" % (new_html, name, title, date)
+        cur.execute(sql)
+        print(title)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+
+
+
 def test():
     # driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
     # driver.get('http://mp.weixin.qq.com/s?timestamp=1466476626&src=3&ver=1&signature=z68MUxylDvqvgdXBhHCDPHmiFMOMUO7MZA7VK2JKcV7yODVmNZbW9YvM8rHk9FEmizF0DlEwCowGG9S7DwpvDSbSNfT8c3JRP2NqP7CitapdQWRZN6hHUYs-7uIl-7QoJqQiI03*Kw2-epnJB-bjxYbSTZ8PxxwL*uZL1-*qEmc=')
@@ -268,6 +297,7 @@ def test():
 if __name__ == '__main__':
     crawl()
     # test()
+    # update_rawhtml()
 
 
 
