@@ -10,6 +10,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import bs4
 import cssutils
 import re
+import datetime
 
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
@@ -35,8 +36,11 @@ public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
 
 
 
-pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
-                passwd='akQq5csSXI5Fsmbx5U4c', db='zhisland_base', port=3306, charset='utf8')
+# pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
+#                 passwd='akQq5csSXI5Fsmbx5U4c', db='zhisland_base', port=3306, charset='utf8')
+
+pool = PooledDB(MySQLdb, 3, host='192.168.2.68', user='zhisland_bms',
+                passwd='zhisland', db='zh_bms_cms', port=3306, charset='utf8')
 
 headers = {
     'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -47,7 +51,8 @@ headers = {
     }
 
 def has_crawled(public_name, title, cur):
-    sql = "select * from weixin_public where name='%s' and title='%s'" % (public_name, title)
+    # sql = "select * from weixin_public where name='%s' and title='%s'" % (public_name, title)
+    sql = "select * from tb_news_audit where resource_from='%s' and title='%s'" % (public_name, title)
     cur.execute(sql)
     result = cur.fetchone()
     if result is None:
@@ -101,6 +106,11 @@ def crawl():
             a_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
             artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
+            author_tag = a_soup.find('em', class_='rich_media_meta rich_media_meta_text')
+            if author_tag is not None:
+                author = author_tag.get_text().strip().encode('utf-8')
+            else:
+                author = 'unKnown'
 
             #format
             #去掉"微信扫一扫"
@@ -216,9 +226,16 @@ def crawl():
             #             for es in removes:
             #                 es.extract()
 
+            today = datetime.date.today().strftime("%Y-%m-%d")
             raw_html = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
-            sql = "insert into weixin_public (name, title, date, raw_html) values ('%s', '%s', '%s', '%s')" \
-                  % (public_name, title, date, raw_html)
+            # sql = "insert into weixin_public (name, title, date, raw_html) values ('%s', '%s', '%s', '%s')" \
+            #       % (public_name, title, date, raw_html)
+
+            sql = "insert into tb_news_audit (url, title, author_name, resource_from, content, content_src, content_read, " \
+                  "audit_status, publish_time, create_time) " \
+                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s')" % \
+                  (artical_link, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today)
+
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             cur.execute(sql)
             hash = abs(title.__hash__())
