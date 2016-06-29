@@ -93,6 +93,10 @@ def crawl():
 
         for idx, href in enumerate(hrefs):
             title = href.get_text().strip().encode('utf-8')
+
+            if title.a.startswith('原创'):
+                title = title.replace('原创', '').strip()
+
             if has_crawled(public_name, title, cur):
                 continue
 
