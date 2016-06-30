@@ -52,7 +52,7 @@ headers = {
 
 def has_crawled(public_name, title, cur):
     # sql = "select * from weixin_public where name='%s' and title='%s'" % (public_name, title)
-    sql = "select * from tb_news_audit where resource_from='%s' and title='%s'" % (public_name, title)
+    sql = "select * from tb_news_resource where resource_from='%s' and title='%s'" % (public_name, title)
     cur.execute(sql)
     result = cur.fetchone()
     if result is None:
@@ -235,7 +235,7 @@ def crawl():
             # sql = "insert into weixin_public (name, title, date, raw_html) values ('%s', '%s', '%s', '%s')" \
             #       % (public_name, title, date, raw_html)
 
-            sql = "insert into tb_news_audit (url, title, author_name, resource_from, content, content_src, content_read, " \
+            sql = "insert into tb_news_resource (url, title, author_name, resource_from, content, content_src, content_read, " \
                   "audit_status, publish_time, create_time) " \
                   "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s')" % \
                   (artical_link, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today)
