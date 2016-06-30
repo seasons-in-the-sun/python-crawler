@@ -20,7 +20,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
-# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -110,7 +110,7 @@ def crawl():
             a_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
             artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
-            author_tag = a_soup.find('em', class_='rich_media_meta rich_media_meta_text')
+            author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
             if author_tag is not None:
                 author = author_tag.get_text().strip().encode('utf-8')
             else:
@@ -240,8 +240,15 @@ def crawl():
                   "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s')" % \
                   (artical_link, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today)
 
+
+
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
-            cur.execute(sql)
+            try:
+                cur.execute(sql)
+            except Exception as e:
+                print(e)
+                print(sql)
+                continue
             hash = abs(title.__hash__())
             output_file = open(path + '/' + str(hash) + '.html', mode='w')
             output_file.write(str(artical_soup))
