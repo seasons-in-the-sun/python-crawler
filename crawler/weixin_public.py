@@ -110,6 +110,12 @@ def crawl():
             a_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
             artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
+
+            if artical_soup is None:
+                print("artical_soup is None")
+                continue
+
+
             author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
             if author_tag is not None:
                 author = author_tag.get_text().strip().encode('utf-8')
