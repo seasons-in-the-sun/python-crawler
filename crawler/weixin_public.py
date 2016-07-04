@@ -128,6 +128,8 @@ def crawl():
 
             artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
 
+            content_text = artical_soup.get_text().strip().encode('utf-8')
+
             if artical_soup is None:
                 print("artical_soup is None")
                 time.sleep(15)
@@ -270,22 +272,18 @@ def crawl():
 
             today = datetime.date.today().strftime("%Y-%m-%d")
             raw_html = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
-            # sql = "insert into weixin_public (name, title, date, raw_html) values ('%s', '%s', '%s', '%s')" \
-            #       % (public_name, title, date, raw_html)
-
 
             src_header = MySQLdb.escape_string(head_tag).encode('utf-8')
 
             sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
                   "audit_status, publish_time, create_time, summary, src_header) " \
                   "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')" % \
-                  (link_url, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today, summary, src_header)
+                  (link_url, title, author, public_name, content_text, raw_html, raw_html, 0, date, today, summary, src_header)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
             except Exception as e:
                 print(e)
-                # print(sql)
                 continue
             # hash = abs(title.__hash__())
             # output_file = open(path + '/' + str(hash) + '.html', mode='w')
@@ -341,7 +339,7 @@ def get_origin_html(soup):
             mid = l.replace('var mid =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
         elif l.startswith('var idx ='):
             idx = l.replace('var idx =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-    origin_url =  'https://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
+    origin_url =  'http://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
     # print(origin_url)
     return origin_url
 
