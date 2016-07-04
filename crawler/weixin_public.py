@@ -11,6 +11,7 @@ import bs4
 import cssutils
 import re
 import datetime
+import json
 
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
@@ -21,7 +22,7 @@ sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
 phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
-phantomjs_path = '/usr/local/bin/phantomjs'
+# phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
@@ -111,6 +112,7 @@ def crawl():
 
             if artical_soup is None:
                 print("artical_soup is None")
+                time.sleep(15)
                 continue
 
 
@@ -122,34 +124,41 @@ def crawl():
 
             #format
             #去掉"微信扫一扫"
-            if artical_soup.find('div', class_='qr_code_pc') is not None:
-                [x.extract() for x in artical_soup.find_all('div', class_='qr_code_pc')]
-            #去掉"相关文章"
-            if artical_soup.find('div', {'id':'sg_tj'}) is not None:
-                [x.extract() for x in artical_soup.find_all('div', {'id':'sg_tj'})]
-            #去掉"精选留言"
-            if artical_soup.find('div', class_='rich_media_area_extra') is not None:
-                [x.extract() for x in artical_soup.find_all('div', class_='rich_media_area_extra')]
-            if artical_soup.find('div', class_='rich_media_tool') is not None:
-                [x.extract() for x in artical_soup.find_all('div', class_='rich_media_tool')]
+            # if artical_soup.find('div', class_='qr_code_pc') is not None:
+            #     [x.extract() for x in artical_soup.find_all('div', class_='qr_code_pc')]
+            # #去掉"相关文章"
+            # if artical_soup.find('div', {'id':'sg_tj'}) is not None:
+            #     [x.extract() for x in artical_soup.find_all('div', {'id':'sg_tj'})]
+            # #去掉"精选留言"
+            # if artical_soup.find('div', class_='rich_media_area_extra') is not None:
+            #     [x.extract() for x in artical_soup.find_all('div', class_='rich_media_area_extra')]
+            # if artical_soup.find('div', class_='rich_media_tool') is not None:
+            #     [x.extract() for x in artical_soup.find_all('div', class_='rich_media_tool')]
 
             #对图片的修改
             if artical_soup.find_all('img', {'data-src':True, 'src':True}) is not None:
                 for e in artical_soup.find_all('img', {'data-src':True, 'src':True}):
                     data_src = e.get('data-src')
-                    e.attrs['src'] = data_src
+
+                    pic_r = requests.get(data_src)
+                    pic_url = 'http://192.168.2.101:4004/v1/image'
+                    r2 = requests.post(pic_url, data = pic_r.content)
+                    json_object = json.loads(r2._content, 'utf-8')
+                    file_name = json_object['TFS_FILE_NAME']
+                    new_src = pic_url + '/' + file_name
+                    e.attrs['src'] = new_src
 
 
             #底部的qq音乐之类
-            if artical_soup.find('script', {'id':'qqmusic_tpl'}) is not None:
-                artical_soup.find('script', {'id':'qqmusic_tpl'}).extract()
-            if artical_soup.find('script', {'id':'voice_tpl'}) is not None:
-                artical_soup.find('script', {'id':'voice_tpl'}).extract()
-
-            #转载相关
-            copyright_info = artical_soup.find('a', {'id':'copyright_info'})
-            if copyright_info is not None:
-                copyright_info.extract()
+            # if artical_soup.find('script', {'id':'qqmusic_tpl'}) is not None:
+            #     artical_soup.find('script', {'id':'qqmusic_tpl'}).extract()
+            # if artical_soup.find('script', {'id':'voice_tpl'}) is not None:
+            #     artical_soup.find('script', {'id':'voice_tpl'}).extract()
+            #
+            # #转载相关
+            # copyright_info = artical_soup.find('a', {'id':'copyright_info'})
+            # if copyright_info is not None:
+            #     copyright_info.extract()
 
 
             #针对一些特定微信号的处理
@@ -243,15 +252,12 @@ def crawl():
                   "audit_status, publish_time, create_time) " \
                   "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s')" % \
                   (artical_link, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today)
-
-
-
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
             except Exception as e:
                 print(e)
-                print(sql)
+                # print(sql)
                 continue
             hash = abs(title.__hash__())
             output_file = open(path + '/' + str(hash) + '.html', mode='w')
@@ -296,7 +302,7 @@ def update_rawhtml():
 
 
 def test():
-    # driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
+    driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
     # driver.get('http://mp.weixin.qq.com/s?timestamp=1466476626&src=3&ver=1&signature=z68MUxylDvqvgdXBhHCDPHmiFMOMUO7MZA7VK2JKcV7yODVmNZbW9YvM8rHk9FEmizF0DlEwCowGG9S7DwpvDSbSNfT8c3JRP2NqP7CitapdQWRZN6hHUYs-7uIl-7QoJqQiI03*Kw2-epnJB-bjxYbSTZ8PxxwL*uZL1-*qEmc=')
     # # print(driver.page_source)
     # soup = BeautifulSoup(driver.page_source)
@@ -307,28 +313,70 @@ def test():
     # style = a[0]['style']
     # s = cssutils.parseStyle(style)
     # print s.keys()
+    url = 'http://mp.weixin.qq.com/s?timestamp=1467364060&src=3&ver=1&signature=X87GNe6X5xzfZSQxx22WbbwtWVJgfEWVTNaenhpmFK6Yi8YNDUfHaRmuZ9U1qV0O6AqUcj3gNt2yT-rPUiTFLV52TaVQD8DV61-mST0Dt82nKWsLV7CDs-eOJT5Naa3LH-P-EDwbs7gjUKJMm5XPGcZWNg98WRfmDu6HuD7eqCI='
+    driver.get(url)
+    time.sleep(5)
+
+    a_soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+    artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
+
+    if artical_soup.find_all('img', {'data-src':True, 'src':True}) is not None:
+        for e in artical_soup.find_all('img', {'data-src':True, 'src':True}):
+            data_src = e.get('data-src')
+            pic_r = requests.get(data_src)
+            url = 'http://192.168.2.101:4004/v1/image'
+            r2 = requests.post(url, data = pic_r.content)
+            json_obj = json.loads(r2._content, 'utf-8')
+
+            print(json_obj['TFS_FILE_NAME'])
 
 
-    # soup = BeautifulSoup(open('/Users/Spirit/Downloads/weixin_public/5/44324380862325552.html'))
-    soup = BeautifulSoup(open('/Users/Spirit/10.html'))
-    a = soup.find('div',{'id':'js_content'}).find_all('p', recursive=False, attrs={'style':True})
+            e.attrs['src'] = url + '/' + json_obj['TFS_FILE_NAME']
 
-    print(len(a))
-    print(a[-1])
 
     # print(a.parent)
 
     # print(s.parent)
-
+    print(artical_soup)
 
     # a.extract()
     # print(soup)
 
-    # driver.quit()
+    driver.quit()
+
+
+def pic():
+    # conn = pool.connection()
+    # cur = conn.cursor()
+
+    pic_path = '/Users/Spirit/requests-sidebar.png'
+
+    pic_url = 'http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png'
+    r = requests.get(pic_url)
+    url = 'http://192.168.2.101:4004/v1/image'
+    r2 = requests.post(url, data = r.content)
+    print(r2._content)
+
+
+
+def upload_pic(pic_path):
+    content = open(pic_path, 'rb').read()
+    url = 'http://192.168.2.81:7500/v1/image'
+    r = requests.post(url, data = content)
+    json_object = json.loads(r._content, 'utf-8')
+    file_name = json_object['TFS_FILE_NAME']
+    return file_name
+
+
+
+
+# http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png
 
 if __name__ == '__main__':
-    crawl()
-    # test()
+    # pic()
+    # crawl()
+    test()
     # update_rawhtml()
 
 
