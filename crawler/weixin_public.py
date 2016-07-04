@@ -21,7 +21,12 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
-# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+head_tag = """
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="http://res.wx.qq.com/mmbizwap/zh_CN/htmledition/style/page/appmsg/page_mp_article_improve2eb52b.css">
+"""
+
+phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -68,8 +73,8 @@ def crawl():
         public_name = public_name.strip().encode('utf-8')
         path = base_dir + str(count)
         count = count + 1
-        if not os.path.exists(path):
-            os.mkdir(path)
+        # if not os.path.exists(path):
+        #     os.mkdir(path)
         #根据公众号名称搜索, 得到列表
         url = 'http://weixin.sogou.com/weixin?type=1&query=%s&ie=utf8&_sug_=n&_sug_type_=' % quote(public_name)
         r = requests.get(url, headers = headers)
@@ -87,6 +92,7 @@ def crawl():
         hrefs = soup2.find_all('h4', {'class':'weui_media_title', 'hrefs':True})
         # titles = soup2.find_all('p', class_='weui_media_desc')
         times = soup2.find_all('p', class_='weui_media_extra_info')
+        summaries = soup2.find_all('p', class_='weui_media_desc')
 
         if len(hrefs) != len(times):
             print('href, title, time not equal, exit')
@@ -100,6 +106,11 @@ def crawl():
 
             if has_crawled(public_name, title, cur):
                 continue
+
+            if summaries[idx] is not None:
+                summary = summaries[idx].get_text().encode('utf-8').strip()
+            else:
+                summary = ''
 
             date = times[idx].get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
             artical_link = base_url + href.get('hrefs')
@@ -146,7 +157,7 @@ def crawl():
                     json_object = json.loads(r2._content, 'utf-8')
                     file_name = json_object['TFS_FILE_NAME']
                     new_src = pic_url + '/' + file_name
-                    e.attrs['src'] = new_src
+                    e.attrs['src'] = new_src.encode('utf-8')
 
 
             #底部的qq音乐之类
@@ -248,10 +259,13 @@ def crawl():
             # sql = "insert into weixin_public (name, title, date, raw_html) values ('%s', '%s', '%s', '%s')" \
             #       % (public_name, title, date, raw_html)
 
-            sql = "insert into tb_news_resource (url, title, author_name, resource_from, content, content_src, content_read, " \
-                  "audit_status, publish_time, create_time) " \
-                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s')" % \
-                  (artical_link, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today)
+
+            src_header = MySQLdb.escape_string(head_tag).encode('utf-8')
+
+            sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
+                  "audit_status, publish_time, create_time, summary, src_header) " \
+                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')" % \
+                  (artical_link, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today, summary, src_header)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
@@ -259,10 +273,10 @@ def crawl():
                 print(e)
                 # print(sql)
                 continue
-            hash = abs(title.__hash__())
-            output_file = open(path + '/' + str(hash) + '.html', mode='w')
-            output_file.write(str(artical_soup))
-            output_file.close()
+            # hash = abs(title.__hash__())
+            # output_file = open(path + '/' + str(hash) + '.html', mode='w')
+            # output_file.write(str(artical_soup))
+            # output_file.close()
             print("%s done" % (title))
         print("%s has done" % public_name)
 
