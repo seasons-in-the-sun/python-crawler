@@ -21,12 +21,15 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
+
+
+# 已经把微信的css放到tfs里面了
 head_tag = """
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="http://res.wx.qq.com/mmbizwap/zh_CN/htmledition/style/page/appmsg/page_mp_article_improve2eb52b.css">
+<link rel="stylesheet" type="text/css" href="http://192.168.2.101:4004/v1/image/T1StETB7KT1RCvBVdK">
 """
 
-phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -102,7 +105,7 @@ def crawl():
             title = href.get_text().strip().encode('utf-8')
 
             if title.startswith('原创'):
-                title = title.replace('原创', '').strip()
+                title = title.replace('原创', '', 1).strip()
 
             if has_crawled(public_name, title, cur):
                 continue
@@ -364,12 +367,12 @@ def pic():
     # conn = pool.connection()
     # cur = conn.cursor()
 
-    pic_path = '/Users/Spirit/requests-sidebar.png'
+    pic_path = '/Users/Spirit/a.css'
 
-    pic_url = 'http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png'
-    r = requests.get(pic_url)
+    # pic_url = 'http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png'
+    # r = requests.get(pic_url)
     url = 'http://192.168.2.101:4004/v1/image'
-    r2 = requests.post(url, data = r.content)
+    r2 = requests.post(url, data = open(pic_path).read())
     print(r2._content)
 
 
