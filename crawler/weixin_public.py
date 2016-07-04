@@ -21,8 +21,8 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
-phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
-# phantomjs_path = '/usr/local/bin/phantomjs'
+# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
