@@ -128,14 +128,14 @@ def crawl():
 
             artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
 
-            content_text = artical_soup.get_text().strip().encode('utf-8')
+
 
             if artical_soup is None:
                 print("artical_soup is None")
                 time.sleep(15)
                 continue
 
-
+            content_text = artical_soup.get_text().strip().encode('utf-8')
             try:
                 link_url = get_origin_html(a_soup)
             except Exception as e:
