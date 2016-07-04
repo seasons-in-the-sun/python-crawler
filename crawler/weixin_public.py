@@ -29,7 +29,7 @@ head_tag = """
 <link rel="stylesheet" type="text/css" href="http://192.168.2.101:4004/v1/image/T1StETB7KT1RCvBVdK">
 """
 
-# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -43,6 +43,10 @@ base_dir = '/home/Spirit/weixin_public/'
 public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
 # public_name_path = 'weixin.txt'
 
+
+
+
+# https://mp.weixin.qq.com/s?__biz=MzA4ODQ4NjcyNg==&mid=2653515306&idx=4&sn=dc2fabf6222201ebbeec5d63b64df144
 
 
 # pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
@@ -87,7 +91,7 @@ def crawl():
         time.sleep(random.uniform(3, 5))
         driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
         driver.get(public_link)
-        time.sleep(random.uniform(5, 10))
+        time.sleep(random.uniform(3, 5))
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
         #得到近期的文章列表
@@ -107,8 +111,8 @@ def crawl():
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
 
-            if has_crawled(public_name, title, cur):
-                continue
+            # if has_crawled(public_name, title, cur):
+            #     continue
 
             if summaries[idx] is not None:
                 summary = summaries[idx].get_text().encode('utf-8').strip()
@@ -129,6 +133,11 @@ def crawl():
                 time.sleep(15)
                 continue
 
+
+            try:
+                link_url = get_origin_html(a_soup)
+            except Exception as e:
+                continue
 
             author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
             if author_tag is not None:
@@ -152,16 +161,18 @@ def crawl():
             #对图片的修改
             if artical_soup.find_all('img', {'data-src':True, 'src':True}) is not None:
                 for e in artical_soup.find_all('img', {'data-src':True, 'src':True}):
-                    data_src = e.get('data-src')
-
-                    pic_r = requests.get(data_src)
-                    pic_url = 'http://192.168.2.101:4004/v1/image'
-                    r2 = requests.post(pic_url, data = pic_r.content)
-                    json_object = json.loads(r2._content, 'utf-8')
-                    file_name = json_object['TFS_FILE_NAME']
-                    new_src = pic_url + '/' + file_name
-                    e.attrs['src'] = new_src.encode('utf-8')
-
+                    try:
+                        data_src = e.get('data-src')
+                        pic_r = requests.get(data_src)
+                        pic_url = 'http://192.168.2.101:4004/v1/image'
+                        r2 = requests.post(pic_url, data = pic_r.content)
+                        json_object = json.loads(r2._content, 'utf-8')
+                        file_name = json_object['TFS_FILE_NAME']
+                        new_src = pic_url + '/' + file_name
+                        e.attrs['src'] = new_src.encode('utf-8')
+                    except Exception as e:
+                        print(e)
+                        continue
 
             #底部的qq音乐之类
             # if artical_soup.find('script', {'id':'qqmusic_tpl'}) is not None:
@@ -268,7 +279,7 @@ def crawl():
             sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
                   "audit_status, publish_time, create_time, summary, src_header) " \
                   "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')" % \
-                  (artical_link, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today, summary, src_header)
+                  (link_url, title, author, public_name, raw_html, raw_html, raw_html, 0, date, today, summary, src_header)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
@@ -316,51 +327,45 @@ def update_rawhtml():
 
 
 
+def get_origin_html(soup):
+    rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
+    aaa = soup.find(text=re.compile(rParams))
+    lines = aaa.split('\n')
+    for l in lines:
+        l = l.strip()
+        if l.startswith('var biz ='):
+            biz = l.replace('var biz =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+        elif l.startswith('var sn ='):
+            sn = l.replace('var sn =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+        elif l.startswith('var mid ='):
+            mid = l.replace('var mid =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+        elif l.startswith('var idx ='):
+            idx = l.replace('var idx =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+    origin_url =  'https://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
+    # print(origin_url)
+    return origin_url
+
 
 
 def test():
-    driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
-    # driver.get('http://mp.weixin.qq.com/s?timestamp=1466476626&src=3&ver=1&signature=z68MUxylDvqvgdXBhHCDPHmiFMOMUO7MZA7VK2JKcV7yODVmNZbW9YvM8rHk9FEmizF0DlEwCowGG9S7DwpvDSbSNfT8c3JRP2NqP7CitapdQWRZN6hHUYs-7uIl-7QoJqQiI03*Kw2-epnJB-bjxYbSTZ8PxxwL*uZL1-*qEmc=')
-    # # print(driver.page_source)
-    # soup = BeautifulSoup(driver.page_source)
-    # a = soup.select('p[style*=max-width]')
-    # # a = soup.find('p', {'style':True})
-    # for aa in a:
-    #     print(aa)
-    # style = a[0]['style']
-    # s = cssutils.parseStyle(style)
-    # print s.keys()
-    url = 'http://mp.weixin.qq.com/s?timestamp=1467364060&src=3&ver=1&signature=X87GNe6X5xzfZSQxx22WbbwtWVJgfEWVTNaenhpmFK6Yi8YNDUfHaRmuZ9U1qV0O6AqUcj3gNt2yT-rPUiTFLV52TaVQD8DV61-mST0Dt82nKWsLV7CDs-eOJT5Naa3LH-P-EDwbs7gjUKJMm5XPGcZWNg98WRfmDu6HuD7eqCI='
-    driver.get(url)
-    time.sleep(5)
+    soup = BeautifulSoup(open('weixin.html'))
+    rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
+    aaa = soup.find(text=re.compile(rParams))
+    lines = aaa.split('\n')
+    for l in lines:
+        l = l.strip()
+        if l.startswith('var biz ='):
+            biz = l.replace('var biz =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+        elif l.startswith('var sn ='):
+            sn = l.replace('var sn =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+        elif l.startswith('var mid ='):
+            mid = l.replace('var mid =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+        elif l.startswith('var idx ='):
+            idx = l.replace('var idx =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+    origin_url =  'https://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
+    # print(origin_url)
+    return origin_url
 
-    a_soup = BeautifulSoup(driver.page_source, 'html.parser')
-
-    artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
-
-    if artical_soup.find_all('img', {'data-src':True, 'src':True}) is not None:
-        for e in artical_soup.find_all('img', {'data-src':True, 'src':True}):
-            data_src = e.get('data-src')
-            pic_r = requests.get(data_src)
-            url = 'http://192.168.2.101:4004/v1/image'
-            r2 = requests.post(url, data = pic_r.content)
-            json_obj = json.loads(r2._content, 'utf-8')
-
-            print(json_obj['TFS_FILE_NAME'])
-
-
-            e.attrs['src'] = url + '/' + json_obj['TFS_FILE_NAME']
-
-
-    # print(a.parent)
-
-    # print(s.parent)
-    print(artical_soup)
-
-    # a.extract()
-    # print(soup)
-
-    driver.quit()
 
 
 def pic():
