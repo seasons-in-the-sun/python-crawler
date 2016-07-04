@@ -375,8 +375,8 @@ def upload_pic(pic_path):
 
 if __name__ == '__main__':
     # pic()
-    # crawl()
-    test()
+    crawl()
+    # test()
     # update_rawhtml()
 
 
