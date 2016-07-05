@@ -111,8 +111,8 @@ def crawl():
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
 
-            # if has_crawled(public_name, title, cur):
-            #     continue
+            if has_crawled(public_name, title, cur):
+                continue
 
             if summaries[idx] is not None:
                 summary = summaries[idx].get_text().encode('utf-8').strip()
