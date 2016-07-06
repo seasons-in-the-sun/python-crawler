@@ -286,6 +286,7 @@ def crawl():
                 cur.execute(sql)
             except Exception as e:
                 print(e)
+                print("%s, %s crawl error" % (public_name, title))
                 continue
             # hash = abs(title.__hash__())
             # output_file = open(path + '/' + str(hash) + '.html', mode='w')
