@@ -131,7 +131,7 @@ def crawl():
 
 
             if artical_soup is None:
-                print("artical_soup is None")
+                print("%s, %s 's artical_soup is None" % (public_name, title))
                 time.sleep(15)
                 continue
 
