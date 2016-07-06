@@ -135,7 +135,9 @@ def crawl():
                 time.sleep(15)
                 continue
 
-            content_text = artical_soup.get_text().strip().encode('utf-8')
+
+            content_text = MySQLdb.escape_string(artical_soup.get_text().encode('utf-8'))
+
             try:
                 link_url = get_origin_html(a_soup)
             except Exception as e:
