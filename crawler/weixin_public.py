@@ -7,8 +7,6 @@ import random
 from selenium import webdriver
 from urllib import quote
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-import bs4
-import cssutils
 import re
 import datetime
 import json
@@ -16,7 +14,6 @@ import json
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
 import sys
-import os
 reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
@@ -29,7 +26,7 @@ head_tag = """
 <link rel="stylesheet" type="text/css" href="http://192.168.2.101:4004/v1/image/T1StETB7KT1RCvBVdK">
 """
 
-phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
+# phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 phantomjs_path = '/usr/local/bin/phantomjs'
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -42,11 +39,6 @@ base_dir = '/home/Spirit/weixin_public/'
 #待爬取公众号列表
 public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
 # public_name_path = 'weixin.txt'
-
-
-
-
-# https://mp.weixin.qq.com/s?__biz=MzA4ODQ4NjcyNg==&mid=2653515306&idx=4&sn=dc2fabf6222201ebbeec5d63b64df144
 
 
 # pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
@@ -78,7 +70,7 @@ def crawl():
     count = 0
     for public_name in open(public_name_path):
         public_name = public_name.strip().encode('utf-8')
-        path = base_dir + str(count)
+        # path = base_dir + str(count)
         count = count + 1
         # if not os.path.exists(path):
         #     os.mkdir(path)
@@ -86,7 +78,16 @@ def crawl():
         url = 'http://weixin.sogou.com/weixin?type=1&query=%s&ie=utf8&_sug_=n&_sug_type_=' % quote(public_name)
         r = requests.get(url, headers = headers)
         soup = BeautifulSoup(r.text, 'html.parser')
-        public_link = soup.find('div', {'target':'_blank', 'href':True}).get('href')
+
+        public_temp_link = soup.find('div', {'target':'_blank', 'href':True})
+
+        if public_temp_link is None:
+            print(soup)
+            print("%s public link is None" % public_name)
+            continue
+
+
+        public_link = public_temp_link.get('href')
 
         time.sleep(random.uniform(5, 8))
         driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
@@ -122,7 +123,7 @@ def crawl():
             date = times[idx].get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
 
             artical_link = href.get('hrefs')
-            if not artical_link.startswith('http'):
+            if not artical_link.startswith('http'):#wtf some link is absolute path
                 artical_link = base_url + href.get('hrefs')
             driver.get(artical_link)
             time.sleep(8)
@@ -142,6 +143,7 @@ def crawl():
             try:
                 link_url = get_origin_html(a_soup)
             except Exception as e:
+                print("%s, %s get url error" % (public_name, title))
                 continue
 
             author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
