@@ -88,10 +88,10 @@ def crawl():
         soup = BeautifulSoup(r.text, 'html.parser')
         public_link = soup.find('div', {'target':'_blank', 'href':True}).get('href')
 
-        time.sleep(random.uniform(3, 5))
+        time.sleep(random.uniform(5, 8))
         driver = webdriver.PhantomJS(phantomjs_path, desired_capabilities=dcap)
         driver.get(public_link)
-        time.sleep(random.uniform(3, 5))
+        time.sleep(random.uniform(5, 8))
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
         #得到近期的文章列表
@@ -120,15 +120,16 @@ def crawl():
                 summary = ''
 
             date = times[idx].get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
-            artical_link = base_url + href.get('hrefs')
+
+            artical_link = href.get('hrefs')
+            if not artical_link.startswith('http'):
+                artical_link = base_url + href.get('hrefs')
             driver.get(artical_link)
-            time.sleep(5)
+            time.sleep(8)
 
             a_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
             artical_soup = a_soup.find('div', {'id':'js_content'})
-
-
 
             if artical_soup is None:
                 print("%s, %s 's artical_soup is None" % (public_name, title))
@@ -296,7 +297,7 @@ def crawl():
         print("%s has done" % public_name)
 
 
-
+        driver.delete_all_cookies()
         driver.quit()
         conn.commit()
     cur.close()
