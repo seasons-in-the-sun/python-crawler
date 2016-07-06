@@ -126,7 +126,7 @@ def crawl():
 
             a_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-            artical_soup = a_soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
+            artical_soup = a_soup.find('div', {'id':'js_content'})
 
 
 
