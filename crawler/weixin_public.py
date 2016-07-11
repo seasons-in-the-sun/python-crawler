@@ -306,6 +306,32 @@ def crawl():
     conn.close()
 
 
+
+def generate_thumbpic():
+    conn = pool.connection()
+    cur = conn.cursor()
+    sql = "select id, content_src from tb_news_resource where cover_small is null"
+    cur.execute(sql)
+    result = cur.fetchall()
+
+    for i in result:
+        id = i[0]
+        soup = BeautifulSoup(i[1].encode('utf-8'))
+        img = soup.find('img', {'src':True})
+        if img is not None:
+            cover_small = img['src']
+            sql = "update tb_news_resource set cover_small='%s' where id = %d" % (cover_small, id)
+            try:
+                cur.execute(sql)
+                conn.commit()
+            except Exception as e:
+                print(sql)
+                continue
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def update_rawhtml():
     conn = pool.connection()
     cur = conn.cursor()
@@ -402,6 +428,7 @@ def upload_pic(pic_path):
 if __name__ == '__main__':
     # pic()
     crawl()
+    generate_thumbpic()
     # test()
     # update_rawhtml()
 
