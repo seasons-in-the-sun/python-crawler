@@ -275,15 +275,21 @@ def crawl():
             #             for es in removes:
             #                 es.extract()
 
+
+            artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
+            src_read = tiny(artical_copy_soup)
+            content_read = MySQLdb.escape_string(str(src_read).encode('utf-8'))
+
+
             today = datetime.date.today().strftime("%Y-%m-%d")
-            raw_html = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
+            content_src = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
 
             src_header = MySQLdb.escape_string(head_tag).encode('utf-8')
 
             sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
                   "audit_status, publish_time, create_time, summary, src_header) " \
                   "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')" % \
-                  (link_url, title, author, public_name, content_text, raw_html, raw_html, 0, date, today, summary, src_header)
+                  (link_url, title, author, public_name, content_text, content_src, content_read, 0, date, today, summary, src_header)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
@@ -332,6 +338,44 @@ def generate_thumbpic():
     cur.close()
     conn.close()
 
+
+
+def generate_read_src():
+    conn = pool.connection()
+    cur = conn.cursor()
+    sql = "select id, content_src from tb_news_resource"
+    cur.execute(sql)
+    result = cur.fetchall()
+    white_list = ['data-type', 'data-src', 'src']
+
+    for i in result:
+        id = i[0]
+        soup = BeautifulSoup(i[1].encode('utf-8'), 'html.parser')
+
+
+        tags = soup.find_all()
+        for t in tags:
+            for attr in ['class', 'id', 'name', 'style']:
+                del t[attr]
+
+        content_read =  MySQLdb.escape_string(str(soup).encode('utf-8'))
+
+
+
+
+        sql = "update tb_news_resource set content_read='%s' where id = %d" % (content_read, id)
+        try:
+            cur.execute(sql)
+            print(id)
+            conn.commit()
+        except Exception as e:
+            print(sql)
+            continue
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def update_rawhtml():
     conn = pool.connection()
     cur = conn.cursor()
@@ -356,6 +400,13 @@ def update_rawhtml():
     conn.close()
 
 
+
+def tiny(soup):
+    tags = soup.find_all()
+    for t in tags:
+        for attr in ['class', 'id', 'name', 'style']:
+            del t[attr]
+    return soup.body
 
 def get_origin_html(soup):
     rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
@@ -429,6 +480,7 @@ if __name__ == '__main__':
     # pic()
     crawl()
     generate_thumbpic()
+    # generate_read_src()
     # test()
     # update_rawhtml()
 
