@@ -316,7 +316,7 @@ def generate_thumbpic():
 
     for i in result:
         id = i[0]
-        soup = BeautifulSoup(i[1].encode('utf-8'))
+        soup = BeautifulSoup(i[1].encode('utf-8'), 'html.parser')
         img = soup.find('img', {'src':True})
         if img is not None:
             cover_small = img['src']
