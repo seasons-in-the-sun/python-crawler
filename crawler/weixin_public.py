@@ -346,7 +346,6 @@ def generate_read_src():
     sql = "select id, content_src from tb_news_resource"
     cur.execute(sql)
     result = cur.fetchall()
-    white_list = ['data-type', 'data-src', 'src']
 
     for i in result:
         id = i[0]
@@ -358,10 +357,14 @@ def generate_read_src():
             for attr in ['class', 'id', 'name', 'style']:
                 del t[attr]
 
+        imgs = soup.find_all('img')
+        for i in imgs:
+            ks = i.attrs.keys()
+            for k in ks:
+                if k != 'src':
+                    del i[k]
+
         content_read =  MySQLdb.escape_string(str(soup).encode('utf-8'))
-
-
-
 
         sql = "update tb_news_resource set content_read='%s' where id = %d" % (content_read, id)
         try:
