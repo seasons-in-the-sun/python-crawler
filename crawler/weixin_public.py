@@ -74,9 +74,7 @@ def crawl():
     conn = pool.connection()
     cur = conn.cursor()
 
-    fp = webdriver.FirefoxProfile()
-    fp.set_preference("general.useragent.override","Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0")
-    fp.update_preferences()
+
 
     # count = 0
     for public_name in open(public_name_path):
@@ -85,6 +83,11 @@ def crawl():
 
         #根据公众号名称搜索, 得到列表
         url = 'http://weixin.sogou.com/weixin?type=1&query=%s&ie=utf8&_sug_=n&_sug_type_=' % quote(public_name)
+
+
+        fp = webdriver.FirefoxProfile()
+        fp.set_preference("general.useragent.override","Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0")
+        fp.update_preferences()
         driver = webdriver.Firefox(firefox_profile=fp)
         driver.get(url)
         time.sleep(3)
