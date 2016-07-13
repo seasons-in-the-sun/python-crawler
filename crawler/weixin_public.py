@@ -101,6 +101,9 @@ def crawl():
 
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
+        driver.delete_all_cookies()
+        driver.quit()
+
         #得到近期的文章列表
         href_list = []
         hrefs = soup2.find_all('h4', {'class':'weui_media_title', 'hrefs':True})
@@ -132,10 +135,15 @@ def crawl():
             artical_link = href.get('hrefs')
             if not artical_link.startswith('http'):#wtf some link is absolute path
                 artical_link = base_url + href.get('hrefs')
-            driver.get(artical_link)
-            time.sleep(8)
+            # driver.get(artical_link)
+            # time.sleep(8)
+            #
+            # a_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-            a_soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+            rrr = requests.get(artical_link)
+            a_soup = BeautifulSoup(rrr.text)
+            print("%s loaded" % artical_link)
 
             artical_soup = a_soup.find('div', {'id':'js_content'})
 
@@ -203,8 +211,7 @@ def crawl():
         time.sleep(2)
 
 
-        driver.delete_all_cookies()
-        driver.quit()
+
         conn.commit()
     cur.close()
     conn.close()
