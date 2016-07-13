@@ -178,7 +178,6 @@ def crawl():
                         json_object = json.loads(r2._content, 'utf-8')
                         file_name = json_object['TFS_FILE_NAME']
                         new_src = pic_url + '/' + file_name
-                        print new_src
                         e.attrs['src'] = new_src.encode('utf-8')
                     except Exception as e:
                         print(e)
