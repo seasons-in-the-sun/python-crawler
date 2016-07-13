@@ -81,7 +81,6 @@ def crawl():
     # count = 0
     for public_name in open(public_name_path):
 
-
         public_name = public_name.strip().encode('utf-8')
 
         #根据公众号名称搜索, 得到列表
@@ -101,8 +100,8 @@ def crawl():
 
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
-        driver.delete_all_cookies()
-        driver.quit()
+        # driver.delete_all_cookies()
+
 
         #得到近期的文章列表
         href_list = []
@@ -157,7 +156,7 @@ def crawl():
 
             try:
                 link_url = get_origin_html(a_soup)
-                print '%s link_url complete' % title
+                # print '%s link_url complete' % title
             except Exception as e:
                 print("%s, %s get url error" % (public_name, title))
                 continue
@@ -169,7 +168,7 @@ def crawl():
                 author = 'unKnown'
 
 
-            print("%s pic start" % title)
+            # print("%s pic start" % title)
             #对图片的修改
             pics = artical_soup.find_all('img', {'data-src':True})
             if pics is not None:
@@ -187,7 +186,7 @@ def crawl():
                         print(e)
                         continue
 
-            print("%s pic complete" % title)
+            # print("%s pic complete" % title)
 
             artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
             src_read = tiny(artical_copy_soup)
@@ -214,11 +213,10 @@ def crawl():
             print("%s done" % (title))
             time.sleep(3)
         print("%s has done" % public_name)
-        time.sleep(2)
-
-
+        time.sleep(10)
 
         conn.commit()
+        driver.quit()
     cur.close()
     conn.close()
     display.stop()
@@ -321,6 +319,13 @@ def tiny(soup):
     for t in tags:
         for attr in ['class', 'id', 'name', 'style']:
             del t[attr]
+
+    imgs = soup.find_all('img')
+    for i in imgs:
+        ks = i.attrs.keys()
+        for k in ks:
+            if k != 'src':
+                del i[k]
     return soup.body
 
 def get_origin_html(soup):
