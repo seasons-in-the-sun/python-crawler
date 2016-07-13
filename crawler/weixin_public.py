@@ -137,15 +137,9 @@ def crawl():
             artical_link = href.get('hrefs')
             if not artical_link.startswith('http'):#wtf some link is absolute path
                 artical_link = base_url + href.get('hrefs')
-            # driver.get(artical_link)
-            # time.sleep(8)
-            #
-            # a_soup = BeautifulSoup(driver.page_source, 'html.parser')
-
 
             rrr = requests.get(artical_link)
             a_soup = BeautifulSoup(rrr.text, 'html.parser')
-            print("%s loaded" % title)
 
             artical_soup = a_soup.find('div', {'id':'js_content'})
 
@@ -184,6 +178,7 @@ def crawl():
                         json_object = json.loads(r2._content, 'utf-8')
                         file_name = json_object['TFS_FILE_NAME']
                         new_src = pic_url + '/' + file_name
+                        print new_src
                         e.attrs['src'] = new_src.encode('utf-8')
                     except Exception as e:
                         print(e)
@@ -202,9 +197,9 @@ def crawl():
             src_header = MySQLdb.escape_string(head_tag).encode('utf-8')
 
             sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
-                  "audit_status, publish_time, create_time, summary, src_header, recommend_text) " \
-                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s')" % \
-                  (link_url, title, author, public_name, content_text, content_src, content_read, 0, date, today, summary, src_header, ' ')
+                  "audit_status, publish_time, create_time, summary, src_header) " \
+                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')" % \
+                  (link_url, title, author, public_name, content_text, content_src, content_read, 0, date, today, summary, src_header)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
