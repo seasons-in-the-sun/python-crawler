@@ -88,10 +88,10 @@ def crawl():
         url = 'http://weixin.sogou.com/weixin?type=1&query=%s&ie=utf8&_sug_=n&_sug_type_=' % quote(public_name)
         driver = webdriver.Firefox(firefox_profile=fp)
         driver.get(url)
-        time.sleep(5)
+        time.sleep(3)
         elem = driver.find_element_by_class_name('txt-box')
         elem.click()
-        time.sleep(8)
+        time.sleep(5)
         hs = driver.window_handles
         if len(hs) != 2:
             print 'window_handles length: %d, error!' % len(hs)
@@ -142,8 +142,8 @@ def crawl():
 
 
             rrr = requests.get(artical_link)
-            a_soup = BeautifulSoup(rrr.text)
-            print("%s loaded" % artical_link)
+            a_soup = BeautifulSoup(rrr.text, 'html.parser')
+            print("%s loaded" % title)
 
             artical_soup = a_soup.find('div', {'id':'js_content'})
 
@@ -157,6 +157,7 @@ def crawl():
 
             try:
                 link_url = get_origin_html(a_soup)
+                print '%s link_url complete' % title
             except Exception as e:
                 print("%s, %s get url error" % (public_name, title))
                 continue
@@ -167,9 +168,12 @@ def crawl():
             else:
                 author = 'unKnown'
 
+
+            print("%s pic start" % title)
             #对图片的修改
-            if artical_soup.find_all('img', {'data-src':True, 'src':True}) is not None:
-                for e in artical_soup.find_all('img', {'data-src':True, 'src':True}):
+            pics = artical_soup.find_all('img', {'data-src':True})
+            if pics is not None:
+                for e in pics:
                     try:
                         data_src = e.get('data-src')
                         pic_r = requests.get(data_src)
@@ -182,6 +186,8 @@ def crawl():
                     except Exception as e:
                         print(e)
                         continue
+
+            print("%s pic complete" % title)
 
             artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
             src_read = tiny(artical_copy_soup)
@@ -215,6 +221,7 @@ def crawl():
         conn.commit()
     cur.close()
     conn.close()
+    display.stop()
 
 
 
