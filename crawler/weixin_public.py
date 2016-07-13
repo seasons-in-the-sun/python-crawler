@@ -112,7 +112,7 @@ def crawl():
             print('href, title, time not equal, exit')
             continue
 
-        print("%s has %s articles" % (public_name, len(hrefs)))
+        print("%s has %s articles to crawl" % (public_name, len(hrefs)))
         for idx, href in enumerate(hrefs):
             title = href.get_text().strip().encode('utf-8')
 
@@ -200,7 +200,7 @@ def crawl():
             print("%s done" % (title))
             time.sleep(3)
         print("%s has done" % public_name)
-        time.sleep(20)
+        time.sleep(2)
 
 
         driver.delete_all_cookies()
