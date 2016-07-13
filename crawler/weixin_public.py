@@ -186,9 +186,9 @@ def crawl():
             src_header = MySQLdb.escape_string(head_tag).encode('utf-8')
 
             sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
-                  "audit_status, publish_time, create_time, summary, src_header) " \
-                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')" % \
-                  (link_url, title, author, public_name, content_text, content_src, content_read, 0, date, today, summary, src_header)
+                  "audit_status, publish_time, create_time, summary, src_header, recommend_text) " \
+                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s')" % \
+                  (link_url, title, author, public_name, content_text, content_src, content_read, 0, date, today, summary, src_header, ' ')
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
