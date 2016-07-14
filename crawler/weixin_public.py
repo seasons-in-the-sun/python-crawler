@@ -11,10 +11,12 @@ import re
 import datetime
 import json
 from pyvirtualdisplay import Display
+import os
 
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
 import sys
+from urlparse import urlparse, parse_qs
 reload(sys)
 sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
@@ -37,13 +39,12 @@ base_url = 'http://mp.weixin.qq.com'
 # base_dir = '/Users/Spirit/Downloads/weixin_public/'
 base_dir = '/home/Spirit/weixin_public/'
 
+pic_dir = '/home/Spirit/images/'
+# pic_dir = '/Users/Spirit/PycharmProjects/python-crawler/images/'
+
 #待爬取公众号列表
 public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
 # public_name_path = 'weixin.txt'
-
-
-# pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
-#                 passwd='akQq5csSXI5Fsmbx5U4c', db='zhisland_base', port=3306, charset='utf8')
 
 pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
                 passwd='akQq5csSXI5Fsmbx5U4c', db='zh_bms_cms', port=3306, charset='utf8')
@@ -58,7 +59,7 @@ headers = {
 
 def has_crawled(public_name, title, cur):
     # sql = "select * from weixin_public where name='%s' and title='%s'" % (public_name, title)
-    sql = "select * from tb_news_resource where resource_from='%s' and title='%s'" % (public_name, title)
+    sql = "select * from tb_news_resource where title='%s'" % (title)
     cur.execute(sql)
     result = cur.fetchone()
     if result is None:
@@ -66,24 +67,17 @@ def has_crawled(public_name, title, cur):
     return True
 
 def crawl():
-
     # for linux headless brower
     display = Display(visible=0, size=(800, 600))
     display.start()
 
     conn = pool.connection()
     cur = conn.cursor()
-
-
-
-    # count = 0
     for public_name in open(public_name_path):
-
         public_name = public_name.strip().encode('utf-8')
 
         #根据公众号名称搜索, 得到列表
         url = 'http://weixin.sogou.com/weixin?type=1&query=%s&ie=utf8&_sug_=n&_sug_type_=' % quote(public_name)
-
 
         fp = webdriver.FirefoxProfile()
         fp.set_preference("general.useragent.override","Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0")
@@ -103,13 +97,9 @@ def crawl():
 
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
-        # driver.delete_all_cookies()
-
-
         #得到近期的文章列表
         href_list = []
         hrefs = soup2.find_all('h4', {'class':'weui_media_title', 'hrefs':True})
-        # titles = soup2.find_all('p', class_='weui_media_desc')
         times = soup2.find_all('p', class_='weui_media_extra_info')
         summaries = soup2.find_all('p', class_='weui_media_desc')
 
@@ -118,9 +108,9 @@ def crawl():
             continue
 
         print("%s has %s articles to crawl" % (public_name, len(hrefs)))
+
         for idx, href in enumerate(hrefs):
             title = href.get_text().strip().encode('utf-8')
-
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
 
@@ -142,20 +132,17 @@ def crawl():
             a_soup = BeautifulSoup(rrr.text, 'html.parser')
 
             artical_soup = a_soup.find('div', {'id':'js_content'})
-
             if artical_soup is None:
                 print("%s, %s 's artical_soup is None" % (public_name, title))
-                time.sleep(15)
+                time.sleep(5)
                 continue
-
 
             content_text = MySQLdb.escape_string(artical_soup.get_text().encode('utf-8'))
 
             try:
                 link_url = get_origin_html(a_soup)
-                # print '%s link_url complete' % title
             except Exception as e:
-                print("%s, %s get url error" % (public_name, title))
+                print("%s, %s get src_url error" % (public_name, title))
                 continue
 
             author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
@@ -164,26 +151,42 @@ def crawl():
             else:
                 author = ''
 
-
-            # print("%s pic start" % title)
             #对图片的修改
             pics = artical_soup.find_all('img', {'data-src':True})
             if pics is not None:
                 for e in pics:
                     try:
                         data_src = e.get('data-src')
-                        pic_r = requests.get(data_src)
-                        pic_url = 'http://192.168.2.101:4004/v1/image?suffix=.jpg&simple_name'
-                        r2 = requests.post(pic_url, data = pic_r.content)
+                        if e.has_attr('data-type'):
+                            pic_format = e['data-type']
+                        else:
+                            pic_format = parse_imgFormat(data_src)
+
+                        pic_filename = abs(data_src.__hash__())
+                        pic_path = pic_dir + str(pic_filename) + '.' + pic_format
+                        if not os.path.exists(pic_path):
+                            pic_r = requests.get(data_src, stream = True)
+                            with open(pic_path, 'wb') as f:
+                                for chunk in pic_r.iter_content(chunk_size=1024):
+                                    if chunk:
+                                        f.write(chunk)
+                                        f.flush()
+                                f.close()
+                        pic_url = 'http://192.168.2.81:7500/v1/image?suffix=.%s&simple_name=1' % pic_format
+                        r2 = requests.post(pic_url, data = open(pic_path).read())
                         json_object = json.loads(r2._content, 'utf-8')
                         file_name = json_object['TFS_FILE_NAME']
-                        new_src = pic_url + '/' + file_name
+                        new_src = 'http://192.168.2.81:8201/impic/' + file_name
                         e.attrs['src'] = new_src.encode('utf-8')
                     except Exception as e:
                         print(e)
                         continue
 
-            # print("%s pic complete" % title)
+            img = artical_soup.find('img', {'src':True})
+            if img:
+                cover_small = img['src']
+            else:
+                cover_small = ''
 
             artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
             src_read = tiny(artical_copy_soup)
@@ -196,9 +199,9 @@ def crawl():
             src_header = MySQLdb.escape_string(head_tag).encode('utf-8')
 
             sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
-                  "audit_status, publish_time, create_time, summary, src_header) " \
-                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')" % \
-                  (link_url, title, author, public_name, content_text, content_src, content_read, 0, date, today, summary, src_header)
+                  "audit_status, publish_time, create_time, summary, src_header, cover_small) " \
+                  "values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s')" % \
+                  (link_url, title, author, public_name, content_text, content_src, content_read, 0, date, today, summary, src_header, cover_small)
             # print("%s, %s, %s" % (href.get('hrefs'), titles[idx].get_text(), times[idx].get_text()))
             try:
                 cur.execute(sql)
@@ -259,20 +262,6 @@ def generate_read_src():
         id = i[0]
         soup = BeautifulSoup(i[1].encode('utf-8'), 'html.parser')
         aaa = tiny(soup)
-
-
-        # tags = soup.find_all()
-        # for t in tags:
-        #     for attr in ['class', 'id', 'name', 'style']:
-        #         del t[attr]
-        #
-        # imgs = soup.find_all('img')
-        # for i in imgs:
-        #     ks = i.attrs.keys()
-        #     for k in ks:
-        #         if k != 'src':
-        #             del i[k]
-
         content_read =  MySQLdb.escape_string(str(aaa).encode('utf-8'))
 
         sql = "update tb_news_resource set content_read='%s' where id = %d" % (content_read, id)
@@ -287,6 +276,15 @@ def generate_read_src():
     conn.commit()
     cur.close()
     conn.close()
+
+
+def parse_imgFormat(data_src):
+    params = parse_qs(urlparse(data_src).query)
+    if params.has_key('wx_fmt'):
+        return params['wx_fmt'][0]
+    else:
+        print("%s has no format, return jpg" % data_src)
+        return 'jpg'
 
 def update_rawhtml():
     conn = pool.connection()
@@ -325,7 +323,7 @@ def tiny(soup):
         for k in ks:
             if k != 'src':
                 del i[k]
-    return soup.body
+    return soup
 
 def get_origin_html(soup):
     rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
@@ -351,23 +349,6 @@ def test():
     soup = BeautifulSoup(open('weixin.html'))
     aaa = tiny(soup)
     print(aaa)
-
-
-
-
-def pic():
-    # conn = pool.connection()
-    # cur = conn.cursor()
-
-    pic_path = '/Users/Spirit/a.css'
-
-    # pic_url = 'http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png'
-    # r = requests.get(pic_url)
-    url = 'http://192.168.2.101:4004/v1/image'
-    r2 = requests.post(url, data = open(pic_path).read())
-    print(r2._content)
-
-
 
 def upload_pic(pic_path):
     content = open(pic_path, 'rb').read()
