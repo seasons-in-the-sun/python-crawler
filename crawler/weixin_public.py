@@ -162,7 +162,7 @@ def crawl():
             if author_tag is not None:
                 author = author_tag.get_text().strip().encode('utf-8')
             else:
-                author = 'unKnown'
+                author = ''
 
 
             # print("%s pic start" % title)
@@ -173,7 +173,7 @@ def crawl():
                     try:
                         data_src = e.get('data-src')
                         pic_r = requests.get(data_src)
-                        pic_url = 'http://192.168.2.101:4004/v1/image'
+                        pic_url = 'http://192.168.2.101:4004/v1/image?suffix=.jpg&simple_name'
                         r2 = requests.post(pic_url, data = pic_r.content)
                         json_object = json.loads(r2._content, 'utf-8')
                         file_name = json_object['TFS_FILE_NAME']
@@ -254,24 +254,26 @@ def generate_read_src():
     cur.execute(sql)
     result = cur.fetchall()
 
+
     for i in result:
         id = i[0]
         soup = BeautifulSoup(i[1].encode('utf-8'), 'html.parser')
+        aaa = tiny(soup)
 
 
-        tags = soup.find_all()
-        for t in tags:
-            for attr in ['class', 'id', 'name', 'style']:
-                del t[attr]
+        # tags = soup.find_all()
+        # for t in tags:
+        #     for attr in ['class', 'id', 'name', 'style']:
+        #         del t[attr]
+        #
+        # imgs = soup.find_all('img')
+        # for i in imgs:
+        #     ks = i.attrs.keys()
+        #     for k in ks:
+        #         if k != 'src':
+        #             del i[k]
 
-        imgs = soup.find_all('img')
-        for i in imgs:
-            ks = i.attrs.keys()
-            for k in ks:
-                if k != 'src':
-                    del i[k]
-
-        content_read =  MySQLdb.escape_string(str(soup).encode('utf-8'))
+        content_read =  MySQLdb.escape_string(str(aaa).encode('utf-8'))
 
         sql = "update tb_news_resource set content_read='%s' where id = %d" % (content_read, id)
         try:
@@ -314,7 +316,7 @@ def update_rawhtml():
 def tiny(soup):
     tags = soup.find_all()
     for t in tags:
-        for attr in ['class', 'id', 'name', 'style']:
+        for attr in ['class', 'id', 'name', 'style', 'height', 'width']:
             del t[attr]
 
     imgs = soup.find_all('img')
@@ -347,22 +349,9 @@ def get_origin_html(soup):
 
 def test():
     soup = BeautifulSoup(open('weixin.html'))
-    rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
-    aaa = soup.find(text=re.compile(rParams))
-    lines = aaa.split('\n')
-    for l in lines:
-        l = l.strip()
-        if l.startswith('var biz ='):
-            biz = l.replace('var biz =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-        elif l.startswith('var sn ='):
-            sn = l.replace('var sn =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-        elif l.startswith('var mid ='):
-            mid = l.replace('var mid =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-        elif l.startswith('var idx ='):
-            idx = l.replace('var idx =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-    origin_url =  'https://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
-    # print(origin_url)
-    return origin_url
+    aaa = tiny(soup)
+    print(aaa)
+
 
 
 
