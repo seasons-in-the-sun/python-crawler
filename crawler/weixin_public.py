@@ -29,6 +29,8 @@ head_tag = """
 <link rel="stylesheet" type="text/css" href="http://192.168.2.101:4004/v1/image/T1StETB7KT1RCvBVdK">
 """
 
+
+
 # phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 # phantomjs_path = '/usr/local/bin/phantomjs'
 # dcap = dict(DesiredCapabilities.PHANTOMJS)
