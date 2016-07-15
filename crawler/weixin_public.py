@@ -69,8 +69,11 @@ def has_crawled(public_name, title, cur):
     return True
 
 def crawl():
+    if not os.path.exists(pic_dir):
+        os.mkdir(pic_dir)
+
     # for linux headless brower
-    display = Display(visible=0, size=(800, 600))
+    display = Display(visible=0, size=(1024, 768))
     display.start()
 
     conn = pool.connection()
@@ -99,8 +102,6 @@ def crawl():
 
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
-
-
         #得到近期的文章列表
         divs = soup2.find_all('div', {'msgid':True})
         for div in divs:
@@ -111,22 +112,10 @@ def crawl():
             if cover is not None and '(' in cover['style']:
                 cover_small_pic = cover['style'].split('(')[1][:-1]
                 cover_format = parse_imgFormat(cover_small_pic)
-                cover_small = process_pic(cover_small_pic, cover_format, is_small=True)
+                cover_small, small_pic = process_pic(cover_small_pic, cover_format, is_small=True)
             else:
                 cover_small = ''
 
-        # href_list = []
-        # hrefs = soup2.find_all('h4', {'class':'weui_media_title', 'hrefs':True})
-        # times = soup2.find_all('p', class_='weui_media_extra_info')
-        # summaries = soup2.find_all('p', class_='weui_media_desc')
-
-        # if len(hrefs) != len(times):
-        #     print('href, title, time not equal, exit')
-        #     continue
-        #
-        # print("%s has %s articles to crawl" % (public_name, len(hrefs)))
-
-        # for idx, href in enumerate(hrefs):
             title = href.get_text().strip().encode('utf-8')
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
@@ -179,17 +168,13 @@ def crawl():
                         else:
                             pic_format = parse_imgFormat(data_src)
 
-                        new_src = process_pic(data_src, pic_format)
+                        new_src, small_pic = process_pic(data_src, pic_format)
                         e.attrs['src'] = new_src
+                        if small_pic:
+                            e['class'] = 'small-image'
                     except Exception as e:
                         print(e)
                         continue
-
-            # img = artical_soup.find('img', {'src':True})
-            # if img:
-            #     cover_small = img['src']
-            # else:
-            #     cover_small = ''
 
             artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
             src_read = tiny(artical_copy_soup)
@@ -265,6 +250,7 @@ def generate_read_src():
         id = i[0]
         soup = BeautifulSoup(i[1].encode('utf-8'), 'html.parser')
         aaa = tiny(soup)
+
         content_read =  MySQLdb.escape_string(str(aaa).encode('utf-8'))
 
         sql = "update tb_news_resource set content_read='%s' where id = %d" % (content_read, id)
@@ -317,14 +303,14 @@ def update_rawhtml():
 def tiny(soup):
     tags = soup.find_all()
     for t in tags:
-        for attr in ['class', 'id', 'name', 'style', 'height', 'width']:
+        for attr in ['id', 'name', 'style', 'height', 'width']:
             del t[attr]
 
     imgs = soup.find_all('img')
     for i in imgs:
         ks = i.attrs.keys()
         for k in ks:
-            if k != 'src':
+            if k != 'src' and k != 'class':
                 del i[k]
     return soup
 
@@ -375,19 +361,24 @@ def process_pic(pic_url, pic_format, is_small = False):
                         f.write(chunk)
                         f.flush()
                 f.close()
+        pic_size = os.path.getsize(pic_path)
+        small_pic = False
+        if pic_size <= 2500:
+            small_pic = True
+
         pic_url = 'http://192.168.2.81:7500/v1/image?suffix=.%s&simple_name=1' % pic_format
         r2 = requests.post(pic_url, data = open(pic_path).read())
         json_object = json.loads(r2._content, 'utf-8')
         origin_file_name = json_object['TFS_FILE_NAME']
-        if is_small:
+        if is_small or small_pic:
             file_name = origin_file_name
         else:
             file_name = os.path.splitext(origin_file_name)[0] + '_L' + os.path.splitext(origin_file_name)[1]
         new_src = 'http://192.168.2.81:8201/impic/' + file_name
-        return new_src.encode('utf-8')
+        return new_src.encode('utf-8'), small_pic
     except Exception as e:
         print e
-        return ''
+        return '', False
 
 # http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png
 
@@ -400,5 +391,8 @@ if __name__ == '__main__':
     # test()
     # update_rawhtml()
 
+    # pic_url = 'http://mmbiz.qpic.cn/mmbiz/EBb5pGJYmryDpicLzFpYZXY3LIz2D6m3NhhriaFzarVNavCf0mp2G7P7zlaOdMRibm1ibEDaZTLAv9kJhXUE49T6jw/0?wx_fmt=gif'
+    # pic_format = 'gif'
+    # process_pic(pic_url, pic_format)
 
 
