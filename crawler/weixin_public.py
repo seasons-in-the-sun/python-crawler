@@ -97,19 +97,34 @@ def crawl():
 
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
+
+
         #得到近期的文章列表
-        href_list = []
-        hrefs = soup2.find_all('h4', {'class':'weui_media_title', 'hrefs':True})
-        times = soup2.find_all('p', class_='weui_media_extra_info')
-        summaries = soup2.find_all('p', class_='weui_media_desc')
+        divs = soup2.find_all('div', {'msgid':True})
+        for div in divs:
+            href = div.find('h4', {'class':'weui_media_title', 'hrefs':True})
+            time_tmp = div.find('p', class_='weui_media_extra_info')
+            summary_tmp = div.find('p', class_='weui_media_desc')
+            cover = div.find('span', {'style':True})
+            if cover is not None and '(' in cover['style']:
+                cover_small_pic = cover['style'].split('(')[1][:-1]
+                cover_format = parse_imgFormat(cover_small_pic)
+                cover_small = process_pic(cover_small_pic, cover_format, is_small=True)
+            else:
+                cover_small = ''
 
-        if len(hrefs) != len(times):
-            print('href, title, time not equal, exit')
-            continue
+        # href_list = []
+        # hrefs = soup2.find_all('h4', {'class':'weui_media_title', 'hrefs':True})
+        # times = soup2.find_all('p', class_='weui_media_extra_info')
+        # summaries = soup2.find_all('p', class_='weui_media_desc')
 
-        print("%s has %s articles to crawl" % (public_name, len(hrefs)))
+        # if len(hrefs) != len(times):
+        #     print('href, title, time not equal, exit')
+        #     continue
+        #
+        # print("%s has %s articles to crawl" % (public_name, len(hrefs)))
 
-        for idx, href in enumerate(hrefs):
+        # for idx, href in enumerate(hrefs):
             title = href.get_text().strip().encode('utf-8')
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
@@ -117,12 +132,12 @@ def crawl():
             if has_crawled(public_name, title, cur):
                 continue
 
-            if summaries[idx] is not None:
-                summary = summaries[idx].get_text().encode('utf-8').strip()
+            if summary_tmp is not None:
+                summary = summary_tmp.get_text().encode('utf-8').strip()
             else:
                 summary = ''
 
-            date = times[idx].get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
+            date = time_tmp.get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
 
             artical_link = href.get('hrefs')
             if not artical_link.startswith('http'):#wtf some link is absolute path
@@ -162,31 +177,17 @@ def crawl():
                         else:
                             pic_format = parse_imgFormat(data_src)
 
-                        pic_filename = abs(data_src.__hash__())
-                        pic_path = pic_dir + str(pic_filename) + '.' + pic_format
-                        if not os.path.exists(pic_path):
-                            pic_r = requests.get(data_src, stream = True)
-                            with open(pic_path, 'wb') as f:
-                                for chunk in pic_r.iter_content(chunk_size=1024):
-                                    if chunk:
-                                        f.write(chunk)
-                                        f.flush()
-                                f.close()
-                        pic_url = 'http://192.168.2.81:7500/v1/image?suffix=.%s&simple_name=1' % pic_format
-                        r2 = requests.post(pic_url, data = open(pic_path).read())
-                        json_object = json.loads(r2._content, 'utf-8')
-                        file_name = json_object['TFS_FILE_NAME']
-                        new_src = 'http://192.168.2.81:8201/impic/' + file_name
-                        e.attrs['src'] = new_src.encode('utf-8')
+                        new_src = process_pic(data_src, pic_format)
+                        e.attrs['src'] = new_src
                     except Exception as e:
                         print(e)
                         continue
 
-            img = artical_soup.find('img', {'src':True})
-            if img:
-                cover_small = img['src']
-            else:
-                cover_small = ''
+            # img = artical_soup.find('img', {'src':True})
+            # if img:
+            #     cover_small = img['src']
+            # else:
+            #     cover_small = ''
 
             artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
             src_read = tiny(artical_copy_soup)
@@ -360,13 +361,39 @@ def upload_pic(pic_path):
 
 
 
+def process_pic(pic_url, pic_format, is_small = False):
+    try:
+        pic_filename = abs(pic_url.__hash__())
+        pic_path = pic_dir + str(pic_filename) + '.' + pic_format
+        if not os.path.exists(pic_path):
+            pic_r = requests.get(pic_url, stream = True)
+            with open(pic_path, 'wb') as f:
+                for chunk in pic_r.iter_content(chunk_size=1024):
+                    if chunk:
+                        f.write(chunk)
+                        f.flush()
+                f.close()
+        pic_url = 'http://192.168.2.81:7500/v1/image?suffix=.%s&simple_name=1' % pic_format
+        r2 = requests.post(pic_url, data = open(pic_path).read())
+        json_object = json.loads(r2._content, 'utf-8')
+        origin_file_name = json_object['TFS_FILE_NAME']
+        if is_small:
+            file_name = origin_file_name
+        else:
+            file_name = os.path.splitext(origin_file_name)[0] + '_L' + os.path.splitext(origin_file_name)[1]
+        new_src = 'http://192.168.2.81:8201/impic/' + file_name
+        return new_src.encode('utf-8')
+    except Exception as e:
+        print e
+        return ''
 
 # http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png
 
 if __name__ == '__main__':
     # pic()
+    # cover()
     crawl()
-    generate_thumbpic()
+    # generate_thumbpic()
     # generate_read_src()
     # test()
     # update_rawhtml()
