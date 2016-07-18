@@ -44,12 +44,27 @@ base_dir = '/home/Spirit/weixin_public/'
 pic_dir = '/home/Spirit/images/'
 # pic_dir = '/Users/Spirit/PycharmProjects/python-crawler/images/'
 
+
+
+
+
+
 #待爬取公众号列表
 public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
 # public_name_path = 'weixin.txt'
 
-pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
-                passwd='akQq5csSXI5Fsmbx5U4c', db='zh_bms_cms', port=3306, charset='utf8')
+#预发布
+# pool = PooledDB(MySQLdb, 3, host='192.168.2.101', user='zhisland_app',
+#                 passwd='akQq5csFsmbx5U', db='zh_bms_cms', port=4007, charset='utf8')
+
+
+#线上
+pool = PooledDB(MySQLdb, 3, host='192.168.2.101', user='fangdonghao',
+                passwd='fAKi_UlkHRO.HTHH', db='zh_bms_cms', port=4006, charset='utf8')
+
+
+# pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
+#                 passwd='akQq5csSXI5Fsmbx5U4c', db='zh_bms_cms', port=3306, charset='utf8')
 
 headers = {
     'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -272,7 +287,7 @@ def parse_imgFormat(data_src):
     if params.has_key('wx_fmt'):
         return params['wx_fmt'][0]
     else:
-        print("%s has no format, return jpg" % data_src)
+        # print("%s has no format, return jpg" % data_src)
         return 'jpg'
 
 def update_rawhtml():
@@ -315,22 +330,38 @@ def tiny(soup):
     return soup
 
 def get_origin_html(soup):
-    rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
-    aaa = soup.find(text=re.compile(rParams))
+    # rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
+    # aaa = soup.find(text=re.compile(rParams))
+    # lines = aaa.split('\n')
+    # for l in lines:
+    #     l = l.strip()
+    #     if l.startswith('var biz ='):
+    #         biz = l.replace('var biz =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+    #     elif l.startswith('var sn ='):
+    #         sn = l.replace('var sn =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+    #     elif l.startswith('var mid ='):
+    #         mid = l.replace('var mid =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+    #     elif l.startswith('var idx ='):
+    #         idx = l.replace('var idx =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
+    # origin_url =  'http://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
+
+    rParams = r'var (msg_link =.*?".*?");'
+    aaa = soup.find(text = re.compile(rParams))
     lines = aaa.split('\n')
     for l in lines:
         l = l.strip()
-        if l.startswith('var biz ='):
-            biz = l.replace('var biz =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-        elif l.startswith('var sn ='):
-            sn = l.replace('var sn =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-        elif l.startswith('var mid ='):
-            mid = l.replace('var mid =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-        elif l.startswith('var idx ='):
-            idx = l.replace('var idx =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-    origin_url =  'http://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
+        if l.startswith('var msg_link ='):
+            msg_link = l.replace('var msg_link =', '').replace(' ', '').replace('\"', '').replace('&amp;', '&').replace('#rd', '').replace(';', '')
+            return msg_link
+
+
+
+
     # print(origin_url)
-    return origin_url
+    # return origin_url
+
+
+
 
 
 
@@ -390,6 +421,11 @@ if __name__ == '__main__':
     # generate_read_src()
     # test()
     # update_rawhtml()
+
+    # url = 'http://mp.weixin.qq.com/s?__biz=MjM5Njc3Mjk0Mg==&mid=2650393563&idx=3&sn=dde0be621070fc9f93550e467b2e678f'
+    # r = requests.get(url)
+    # soup = BeautifulSoup(r.text)
+    # get_origin_html(soup)
 
     # pic_url = 'http://mmbiz.qpic.cn/mmbiz/EBb5pGJYmryDpicLzFpYZXY3LIz2D6m3NhhriaFzarVNavCf0mp2G7P7zlaOdMRibm1ibEDaZTLAv9kJhXUE49T6jw/0?wx_fmt=gif'
     # pic_format = 'gif'
