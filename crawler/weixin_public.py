@@ -25,8 +25,7 @@ __author__ = 'Spirit'
 
 # 已经把微信的css放到tfs里面了
 head_tag = """
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="http://192.168.2.101:4004/v1/image/T1StETB7KT1RCvBVdK">
+
 """
 
 
@@ -39,9 +38,9 @@ head_tag = """
 # )
 base_url = 'http://mp.weixin.qq.com'
 # base_dir = '/Users/Spirit/Downloads/weixin_public/'
-base_dir = '/home/Spirit/weixin_public/'
+# base_dir = '/home/ddtest/weixin_public/'
 
-pic_dir = '/home/Spirit/images/'
+pic_dir = '/home/ddtest/images/'
 # pic_dir = '/Users/Spirit/PycharmProjects/python-crawler/images/'
 
 
@@ -50,7 +49,7 @@ pic_dir = '/home/Spirit/images/'
 
 
 #待爬取公众号列表
-public_name_path = '/home/Spirit/python-crawler/crawler/weixin.txt'
+public_name_path = '/home/ddtest/python-crawler/crawler/weixin.txt'
 # public_name_path = 'weixin.txt'
 
 #预发布
@@ -156,6 +155,11 @@ def crawl():
             if artical_soup is None:
                 print("%s, %s 's artical_soup is None" % (public_name, title))
                 time.sleep(5)
+                continue
+
+            iframe = artical_soup.find('iframe')
+            if iframe is not None:
+                print("%s, %s has iframe, continue") % (public_name, title)
                 continue
 
             content_text = MySQLdb.escape_string(artical_soup.get_text().encode('utf-8'))
@@ -397,7 +401,7 @@ def process_pic(pic_url, pic_format, is_small = False):
         if pic_size <= 2500:
             small_pic = True
 
-        pic_url = 'http://192.168.2.81:7500/v1/image?suffix=.%s&simple_name=1' % pic_format
+        pic_url = 'http://10.10.20.5:80/v1/image?suffix=.%s&simple_name=1' % pic_format
         r2 = requests.post(pic_url, data = open(pic_path).read())
         json_object = json.loads(r2._content, 'utf-8')
         origin_file_name = json_object['TFS_FILE_NAME']
@@ -405,7 +409,7 @@ def process_pic(pic_url, pic_format, is_small = False):
             file_name = origin_file_name
         else:
             file_name = os.path.splitext(origin_file_name)[0] + '_L' + os.path.splitext(origin_file_name)[1]
-        new_src = 'http://192.168.2.81:8201/impic/' + file_name
+        new_src = 'http://impic.zhisland.com/impic/' + file_name
         return new_src.encode('utf-8'), small_pic
     except Exception as e:
         print e
