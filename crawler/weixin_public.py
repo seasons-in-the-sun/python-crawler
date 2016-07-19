@@ -129,6 +129,7 @@ def crawl():
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
 
+
             if has_crawled(public_name, title, cur):
                 continue
 
@@ -225,63 +226,6 @@ def crawl():
     display.stop()
 
 
-
-def generate_thumbpic():
-    conn = pool.connection()
-    cur = conn.cursor()
-    sql = "select id, content_src from tb_news_resource where cover_small is null"
-    cur.execute(sql)
-    result = cur.fetchall()
-
-    for i in result:
-        id = i[0]
-        soup = BeautifulSoup(i[1].encode('utf-8'), 'html.parser')
-        img = soup.find('img', {'src':True})
-        if img is not None:
-            cover_small = img['src']
-            sql = "update tb_news_resource set cover_small='%s' where id = %d" % (cover_small, id)
-            try:
-                cur.execute(sql)
-                conn.commit()
-            except Exception as e:
-                print(sql)
-                continue
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
-
-
-def generate_read_src():
-    conn = pool.connection()
-    cur = conn.cursor()
-    sql = "select id, content_src from tb_news_resource"
-    cur.execute(sql)
-    result = cur.fetchall()
-
-
-    for i in result:
-        id = i[0]
-        soup = BeautifulSoup(i[1].encode('utf-8'), 'html.parser')
-        aaa = tiny(soup)
-
-        content_read =  MySQLdb.escape_string(str(aaa).encode('utf-8'))
-
-        sql = "update tb_news_resource set content_read='%s' where id = %d" % (content_read, id)
-        try:
-            cur.execute(sql)
-            print(id)
-            conn.commit()
-        except Exception as e:
-            print(sql)
-            continue
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
-
 def parse_imgFormat(data_src):
     params = parse_qs(urlparse(data_src).query)
     if params.has_key('wx_fmt'):
@@ -367,6 +311,16 @@ def process_pic(pic_url, pic_format, is_small = False):
     except Exception as e:
         print e
         return '', False
+
+
+def filter_invalid_str(text):
+    try:
+        # UCS-4
+        highpoints = re.compile(u'[\U00010000-\U0010ffff]')
+    except re.error:
+        # UCS-2
+        highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+    return highpoints.sub(u'', text)
 
 # http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png
 
