@@ -346,10 +346,10 @@ def process_pic(pic_url, pic_format, is_small = False):
         if pic_size <= 2500:
             small_pic = True
 
-        pic_url = 'http://10.10.20.5:80/v1/image?suffix=.%s&simple_name=1' % pic_format
+        post_url = 'http://10.10.20.5:80/v1/image?suffix=.%s&simple_name=1' % pic_format
         legal_filename = False
         while not legal_filename:
-            r2 = requests.post(pic_url, data = open(pic_path).read())
+            r2 = requests.post(post_url, data = open(pic_path).read())
             json_object = json.loads(r2._content, 'utf-8')
             origin_file_name = json_object['TFS_FILE_NAME']
             segs = origin_file_name.split('.')
