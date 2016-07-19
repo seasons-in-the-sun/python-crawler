@@ -355,7 +355,8 @@ def process_pic(pic_url, pic_format, is_small = False):
             segs = origin_file_name.split('.')
             if len(segs) == 2:
                 legal_filename = True
-            print("%s, %s not legal" % (pic_url, origin_file_name))
+            else:
+                print("%s, %s not legal" % (pic_url, origin_file_name))
 
         if is_small or small_pic:
             file_name = origin_file_name
