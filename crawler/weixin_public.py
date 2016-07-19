@@ -25,10 +25,7 @@ __author__ = 'Spirit'
 
 # 已经把微信的css放到tfs里面了
 head_tag = """
-
 """
-
-
 
 # phantomjs_path = '/server/phantomjs-2.1.1/bin/phantomjs'
 # phantomjs_path = '/usr/local/bin/phantomjs'
@@ -42,11 +39,6 @@ base_url = 'http://mp.weixin.qq.com'
 
 pic_dir = '/home/ddtest/images/'
 # pic_dir = '/Users/Spirit/PycharmProjects/python-crawler/images/'
-
-
-
-
-
 
 #待爬取公众号列表
 public_name_path = '/home/ddtest/python-crawler/crawler/weixin.txt'
@@ -130,6 +122,9 @@ def crawl():
             else:
                 cover_small = ''
 
+            if cover_small == '':
+                continue
+
             title = href.get_text().strip().encode('utf-8')
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
@@ -157,9 +152,9 @@ def crawl():
                 time.sleep(5)
                 continue
 
-            iframe = artical_soup.find('iframe')
+            iframe = artical_soup.find('iframe', class_='video_iframe')
             if iframe is not None:
-                print("%s, %s has iframe, continue") % (public_name, title)
+                print("%s, %s has iframe video, continue") % (public_name, title)
                 continue
 
             content_text = MySQLdb.escape_string(artical_soup.get_text().encode('utf-8'))
@@ -188,6 +183,7 @@ def crawl():
                             pic_format = parse_imgFormat(data_src)
 
                         new_src, small_pic = process_pic(data_src, pic_format)
+
                         e.attrs['src'] = new_src
                         if small_pic:
                             e['class'] = 'small-image'
@@ -218,9 +214,9 @@ def crawl():
                 continue
 
             print("%s done" % (title))
-            time.sleep(3)
+            time.sleep(1)
         print("%s has done" % public_name)
-        time.sleep(10)
+        time.sleep(5)
 
         conn.commit()
         driver.quit()
@@ -294,31 +290,6 @@ def parse_imgFormat(data_src):
         # print("%s has no format, return jpg" % data_src)
         return 'jpg'
 
-def update_rawhtml():
-    conn = pool.connection()
-    cur = conn.cursor()
-    sql = "select name, title, date, raw_html from weixin_public"
-    cur.execute(sql)
-    result = cur.fetchall()
-
-    for i in result:
-        name = i[0]
-        title = i[1]
-        date = i[2]
-        soup = BeautifulSoup(i[3])
-        artical_soup = soup.find('div', {'id':'js_content', 'class':'rich_media_content'})
-        new_html = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
-
-        sql = "update weixin_public set raw_html='%s' where name='%s' and title='%s' and date='%s'" % (new_html, name, title, date)
-        cur.execute(sql)
-        print(title)
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
-
-
 def tiny(soup):
     tags = soup.find_all()
     for t in tags:
@@ -358,32 +329,6 @@ def get_origin_html(soup):
             msg_link = l.replace('var msg_link =', '').replace(' ', '').replace('\"', '').replace('&amp;', '&').replace('#rd', '').replace(';', '')
             return msg_link
 
-
-
-
-    # print(origin_url)
-    # return origin_url
-
-
-
-
-
-
-def test():
-    soup = BeautifulSoup(open('weixin.html'))
-    aaa = tiny(soup)
-    print(aaa)
-
-def upload_pic(pic_path):
-    content = open(pic_path, 'rb').read()
-    url = 'http://192.168.2.81:7500/v1/image'
-    r = requests.post(url, data = content)
-    json_object = json.loads(r._content, 'utf-8')
-    file_name = json_object['TFS_FILE_NAME']
-    return file_name
-
-
-
 def process_pic(pic_url, pic_format, is_small = False):
     try:
         pic_filename = abs(pic_url.__hash__())
@@ -391,7 +336,7 @@ def process_pic(pic_url, pic_format, is_small = False):
         if not os.path.exists(pic_path):
             pic_r = requests.get(pic_url, stream = True)
             with open(pic_path, 'wb') as f:
-                for chunk in pic_r.iter_content(chunk_size=1024):
+                for chunk in pic_r.iter_content(chunk_size=4096):
                     if chunk:
                         f.write(chunk)
                         f.flush()
@@ -402,9 +347,16 @@ def process_pic(pic_url, pic_format, is_small = False):
             small_pic = True
 
         pic_url = 'http://10.10.20.5:80/v1/image?suffix=.%s&simple_name=1' % pic_format
-        r2 = requests.post(pic_url, data = open(pic_path).read())
-        json_object = json.loads(r2._content, 'utf-8')
-        origin_file_name = json_object['TFS_FILE_NAME']
+        legal_filename = False
+        while not legal_filename:
+            r2 = requests.post(pic_url, data = open(pic_path).read())
+            json_object = json.loads(r2._content, 'utf-8')
+            origin_file_name = json_object['TFS_FILE_NAME']
+            segs = origin_file_name.split('.')
+            if len(segs) == 2:
+                legal_filename = True
+            print("%s, %s not legal" % (pic_url, origin_file_name))
+
         if is_small or small_pic:
             file_name = origin_file_name
         else:
@@ -417,22 +369,45 @@ def process_pic(pic_url, pic_format, is_small = False):
 
 # http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png
 
+def crawl_single(src_url):
+    rrr = requests.get(src_url)
+    a_soup = BeautifulSoup(rrr.text, 'html.parser')
+
+    artical_soup = a_soup.find('div', {'id':'js_content'})
+    if artical_soup is None:
+        return
+
+    iframe = artical_soup.find('iframe', class_='video_iframe')
+    if iframe is not None:
+        return
+
+    author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
+    if author_tag is not None:
+        author = author_tag.get_text().strip().encode('utf-8')
+    else:
+        author = ''
+
+    #对图片的修改
+    pics = artical_soup.find_all('img', {'data-src':True})
+    if pics is not None:
+        for e in pics:
+            try:
+                data_src = e.get('data-src')
+                if e.has_attr('data-type'):
+                    pic_format = e['data-type']
+                else:
+                    pic_format = parse_imgFormat(data_src)
+
+                new_src, small_pic = process_pic(data_src, pic_format)
+                e.attrs['src'] = new_src
+                if small_pic:
+                    e['class'] = 'small-image'
+            except Exception as e:
+                print(e)
+                continue
+
+
 if __name__ == '__main__':
     # pic()
     # cover()
     crawl()
-    # generate_thumbpic()
-    # generate_read_src()
-    # test()
-    # update_rawhtml()
-
-    # url = 'http://mp.weixin.qq.com/s?__biz=MjM5Njc3Mjk0Mg==&mid=2650393563&idx=3&sn=dde0be621070fc9f93550e467b2e678f'
-    # r = requests.get(url)
-    # soup = BeautifulSoup(r.text)
-    # get_origin_html(soup)
-
-    # pic_url = 'http://mmbiz.qpic.cn/mmbiz/EBb5pGJYmryDpicLzFpYZXY3LIz2D6m3NhhriaFzarVNavCf0mp2G7P7zlaOdMRibm1ibEDaZTLAv9kJhXUE49T6jw/0?wx_fmt=gif'
-    # pic_format = 'gif'
-    # process_pic(pic_url, pic_format)
-
-
