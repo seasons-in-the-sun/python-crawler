@@ -44,7 +44,7 @@ host = config.get(section, 'host')
 user = config.get(section, 'user')
 passwd = config.get(section, 'passwd')
 db = config.get(section, 'db')
-port = config.get(section, 'port')
+port = config.getint(section, 'port')
 pool = PooledDB(MySQLdb, 3, host=host, user=user,
                 passwd=passwd, db=db, port=port, charset='utf8')
 pic_dir = config.get(section, 'pic_dir')
