@@ -12,6 +12,7 @@ import datetime
 import json
 from pyvirtualdisplay import Display
 import os
+import ConfigParser
 
 from DBUtils.PooledDB import PooledDB
 import MySQLdb
@@ -22,6 +23,8 @@ sys.setdefaultencoding('utf-8')
 __author__ = 'Spirit'
 
 
+config = ConfigParser.RawConfigParser()
+config.read('../config.txt')
 
 # 已经把微信的css放到tfs里面了
 head_tag = """
@@ -34,28 +37,19 @@ head_tag = """
 #     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
 # )
 base_url = 'http://mp.weixin.qq.com'
-# base_dir = '/Users/Spirit/Downloads/weixin_public/'
-# base_dir = '/home/ddtest/weixin_public/'
-
-pic_dir = '/home/ddtest/images/'
-# pic_dir = '/Users/Spirit/PycharmProjects/python-crawler/images/'
-
-#待爬取公众号列表
-public_name_path = '/home/ddtest/python-crawler/crawler/weixin.txt'
-# public_name_path = 'weixin.txt'
-
-#预发布
-# pool = PooledDB(MySQLdb, 3, host='192.168.2.101', user='zhisland_app',
-#                 passwd='akQq5csFsmbx5U', db='zh_bms_cms', port=4007, charset='utf8')
 
 
-#线上
-pool = PooledDB(MySQLdb, 3, host='192.168.2.101', user='fangdonghao',
-                passwd='fAKi_UlkHRO.HTHH', db='zh_bms_cms', port=4006, charset='utf8')
+section = 'weixin_online'
+host = config.get(section, 'host')
+user = config.get(section, 'user')
+passwd = config.get(section, 'passwd')
+db = config.get(section, 'db')
+port = config.get(section, 'port')
+pool = PooledDB(MySQLdb, 3, host=host, user=user,
+                passwd=passwd, db=db, port=port, charset='utf8')
+pic_dir = config.get(section, 'pic_dir')
+public_name_path = config.get(section, 'public_name_path')
 
-
-# pool = PooledDB(MySQLdb, 3, host='192.168.2.96', user='root',
-#                 passwd='akQq5csSXI5Fsmbx5U4c', db='zh_bms_cms', port=3306, charset='utf8')
 
 headers = {
     'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -138,7 +132,7 @@ def crawl():
             else:
                 summary = ''
 
-            date = time_tmp.get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
+            # date = time_tmp.get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
 
             artical_link = href.get('hrefs')
             if not artical_link.startswith('http'):#wtf some link is absolute path
@@ -171,6 +165,14 @@ def crawl():
                 author = author_tag.get_text().strip().encode('utf-8')
             else:
                 author = ''
+
+            date_tag = a_soup.find('em', {'id':'post-date'})
+            if date_tag is not None:
+                date = date_tag.get_text()
+            else:
+                print("%s, %s get date error") % (public_name, title)
+                continue
+
 
             #对图片的修改
             pics = artical_soup.find_all('img', {'data-src':True})
