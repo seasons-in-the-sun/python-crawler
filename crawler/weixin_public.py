@@ -123,7 +123,7 @@ def crawl():
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
 
-            if title.startswith('每日华语'):
+            if title.startswith('每日花语'):
                 continue
 
             if has_crawled(public_name, title, cur):
