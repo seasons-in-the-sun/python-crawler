@@ -24,7 +24,7 @@ __author__ = 'Spirit'
 
 
 config = ConfigParser.RawConfigParser()
-config.read('../config.txt')
+config.read('/home/ddtest/python-crawler/config.txt')
 
 # 已经把微信的css放到tfs里面了
 head_tag = """
