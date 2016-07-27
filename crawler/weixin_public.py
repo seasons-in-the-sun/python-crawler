@@ -2,6 +2,7 @@
 
 import requests
 from bs4 import BeautifulSoup
+import bs4
 import time
 import random
 from selenium import webdriver
@@ -25,6 +26,7 @@ __author__ = 'Spirit'
 
 config = ConfigParser.RawConfigParser()
 config.read('/home/ddtest/python-crawler/config.txt')
+# config.read('../config.txt')
 
 # 已经把微信的css放到tfs里面了
 head_tag = """
@@ -39,7 +41,7 @@ head_tag = """
 base_url = 'http://mp.weixin.qq.com'
 
 
-section = 'weixin_online'
+section = 'weixin_local'
 host = config.get(section, 'host')
 user = config.get(section, 'user')
 passwd = config.get(section, 'passwd')
@@ -49,6 +51,43 @@ pool = PooledDB(MySQLdb, 3, host=host, user=user,
                 passwd=passwd, db=db, port=port, charset='utf8')
 pic_dir = config.get(section, 'pic_dir')
 public_name_path = config.get(section, 'public_name_path')
+tfs_post = config.get(section, 'tfs_post')
+tfs_get = config.get(section, 'tfs_get')
+
+
+filter_set = set()
+black_pic_lists = set()
+#华夏基金e洞察
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/eYkgfnPPlD1HRCF2VNibOAoa0NIt3bz8zicYibF29c5eiafsX31VwmfnDnPJnwFIsua8QQR5jIl73tKrY8OmsCSVFg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/eYkgfnPPlD1HRCF2VNibOAoa0NIt3bz8zCH1a05AcicQjCRicYHMAsbMCSVSFPOuROvjZXSRcGYM0T0zh1Yvicz8Eg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+#春暖花开
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/WGXdicwmohqSS3X2z6XJ6tzlQWSAfFA5O3icn8QkR0XWV9pdAD5MIHc0jvBVNNNcePvPtWbW3Nfvjg7S8XibXRLbA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+#深蓝财经网
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/1LLeWMac7MkT0CEjObkBxg9N1D0crU2HQRpQQNvVks28XMtDmo81bDHqSC1hMoOpu1fTrOibpbCZuC8XTa8bxQQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+#华商韬略
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2y9FyicddUI6gUTqo8pnSGPFoKFL40fQezjIfcXHiaenbh11iaTS3cNqYjMIic59nkMuX5V4UiaxycMeRug/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2yicQN6Py6iaCppVRxCzS7lCzQ8DWg8uamQc7pSEZCDN7vaGOWM6KUicTQTfs8BO2libVyADEqFLkxBibeg/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2y8wbUrKFjExsibXRGqocCiaBnzT1aUDpEIu75uicZVic3pL3MfhoXwZdOPRmQLU2qO3nVAg9hT8wm0DoQ/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+#扑克投资家
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxN2LD58GDBmp6bVH54Qnr4sbcWIribOGQ5F119P1wcAH6CGaIZqeV73A/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxOaDf0Ysh7x4tye0QTuwZz8fdI0QJRLN2rZMka6V4YxLU1vfJmemYgw/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxoGD8AXqK9q1W1Yq6wOZebuNgua5ibGib0Yia5uxL2KRyy8o0pbXNY9wEA/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+#新经济100人
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/VYTjvVCzU38ZN35Wss2KNLBaz8PdQLep3OibdU5brHKVtxCxTWaIZ2cBHwdAOdENg9WhlUGhp6thK9RmBO7SW4Q/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+#虎嗅网
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/b2YlTLuGbKCKHPmMObFDLkW3WSh7HV3x1ga6ITIlPJAPCaBaszqmCzWzAbZCaUXNZUatnvJlgWceTRL84EicVng/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
+#创业家
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/5M8nWS1bzPiaArfwiamrCicbsUVLZichqWDvoEP4ib3z8D7ErH601OFtZ2Zl3MtEg1BbMHN5q9pNNq76icICDlbJQwew/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/5M8nWS1bzPiaArfwiamrCicbsUVLZichqWDvoEP4ib3z8D7ErH601OFtZ2Zl3MtEg1BbMHN5q9pNNq76icICDlbJQwew/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
+#笔记侠
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myjy1TIH6HVNsibbcF4W9fsxObU0WaMuNhHfYDb2xWfUeZrLicBo3ACX6fLMIGLKegPc87qcIabVgMFg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myjJkksibRulqCuHJasyKxuC7DtW5jxfL2xDGlnibQJIiaibAgXoIr6n0yNCYmrL8PztU6rddmZCs0XBkA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myiagS5lpSnFzct0YWhWYa5uShrUF0I0b1IY3pibpCJsDsa0Mia7Z4uzQeyhxln1cM7nWqAkYddiatVXbA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myiaQ5FMO2MKCqNPQEwWrtlZwo42aOtB2Sp0Z2dONuTUB1eqK8zsN5jfjLO4o3E4D0oDCyBsStXXhoA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+#场景实验室
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/lKnKdYpK3NmViaa5BfUcvQ7m1t7icEbhdRm30F7k3YMFluHncd3hnswL3c6QUJmDnMOhibxUzVkEbrmILnE8MM1SQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+#华尔街见闻
+black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OVAmd6VfEiaOjS0Liapd9naDxaA36pN7d9GQCXJCqXyBia2bgjfpESqje14WQricjqYdGibwiameucZyiayTkmJL5fzQg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
 
 
 headers = {
@@ -59,6 +98,13 @@ headers = {
     'accept-language': "zh-CN,zh;q=0.8",
     }
 
+
+def init():
+    for p_url in black_pic_lists:
+        sig = get_pic_signature(p_url)
+        filter_set.add(sig)
+
+
 def has_crawled(public_name, title, cur):
     # sql = "select * from weixin_public where name='%s' and title='%s'" % (public_name, title)
     sql = "select * from tb_news_resource where title='%s'" % (title)
@@ -67,6 +113,14 @@ def has_crawled(public_name, title, cur):
     if result is None:
         return False
     return True
+
+def get_pic_signature(data_src):
+    pp = urlparse(data_src)[2]
+    segs = pp.split('/')
+    if len(segs) < 4:
+        return None
+    return segs[2]
+
 
 def crawl():
     if not os.path.exists(pic_dir):
@@ -78,6 +132,7 @@ def crawl():
 
     conn = pool.connection()
     cur = conn.cursor()
+    cur.execute('SET NAMES utf8mb4')
     for public_name in open(public_name_path):
         public_name = public_name.strip().encode('utf-8')
 
@@ -89,10 +144,10 @@ def crawl():
         fp.update_preferences()
         driver = webdriver.Firefox(firefox_profile=fp)
         driver.get(url)
-        time.sleep(3)
+        time.sleep(2)
         elem = driver.find_element_by_class_name('txt-box')
         elem.click()
-        time.sleep(5)
+        time.sleep(3)
         hs = driver.window_handles
         if len(hs) != 2:
             print 'window_handles length: %d, error!' % len(hs)
@@ -106,7 +161,6 @@ def crawl():
         divs = soup2.find_all('div', {'msgid':True})
         for div in divs:
             href = div.find('h4', {'class':'weui_media_title', 'hrefs':True})
-            time_tmp = div.find('p', class_='weui_media_extra_info')
             summary_tmp = div.find('p', class_='weui_media_desc')
             cover = div.find('span', {'style':True})
             if cover is not None and '(' in cover['style']:
@@ -123,7 +177,7 @@ def crawl():
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
 
-            if title.startswith('每日花语'):
+            if title.startswith('每日花语') or '潮汐·扑克问答' in title:
                 continue
 
             if has_crawled(public_name, title, cur):
@@ -133,8 +187,6 @@ def crawl():
                 summary = summary_tmp.get_text().encode('utf-8').strip()
             else:
                 summary = ''
-
-            # date = time_tmp.get_text().encode('utf-8').replace('年', '-').replace('月', '-').replace('日', '')
 
             artical_link = href.get('hrefs')
             if not artical_link.startswith('http'):#wtf some link is absolute path
@@ -146,7 +198,6 @@ def crawl():
             artical_soup = a_soup.find('div', {'id':'js_content'})
             if artical_soup is None:
                 print("%s, %s 's artical_soup is None" % (public_name, title))
-                time.sleep(5)
                 continue
 
             iframe = artical_soup.find('iframe', class_='video_iframe')
@@ -154,19 +205,11 @@ def crawl():
                 print("%s, %s has iframe video, continue") % (public_name, title)
                 continue
 
-            content_text = MySQLdb.escape_string(artical_soup.get_text().encode('utf-8'))
-
             try:
                 link_url = get_origin_html(a_soup)
             except Exception as e:
                 print("%s, %s get src_url error" % (public_name, title))
                 continue
-
-            author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
-            if author_tag is not None:
-                author = author_tag.get_text().strip().encode('utf-8')
-            else:
-                author = ''
 
             date_tag = a_soup.find('em', {'id':'post-date'})
             if date_tag is not None:
@@ -175,35 +218,21 @@ def crawl():
                 print("%s, %s get date error") % (public_name, title)
                 continue
 
+            content_text = MySQLdb.escape_string(artical_soup.get_text().encode('utf-8'))
+            if '课程详情' in content_text and '报名需知' in content_text:
+                print("%s, %s 是教育广告" % (public_name, title))
+                continue
 
-            #对图片的修改
-            pics = artical_soup.find_all('img', {'data-src':True})
-            if pics is not None:
-                for e in pics:
-                    try:
-                        data_src = e.get('data-src')
-                        if e.has_attr('data-type'):
-                            pic_format = e['data-type']
-                        else:
-                            pic_format = parse_imgFormat(data_src)
+            author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
+            if author_tag is not None:
+                author = author_tag.get_text().strip().encode('utf-8')
+            else:
+                author = ''
 
-                        new_src, small_pic = process_pic(data_src, pic_format)
-
-                        e.attrs['src'] = new_src
-                        if small_pic:
-                            e['class'] = 'small-image'
-                    except Exception as e:
-                        print(e)
-                        continue
-
-            artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
-            src_read = tiny(artical_copy_soup)
-            content_read = MySQLdb.escape_string(str(src_read).encode('utf-8'))
-
-
+            content_read, content_src = crawl_single(artical_soup, public_name)
+            if content_read is None:
+                continue
             today = datetime.date.today().strftime("%Y-%m-%d")
-            content_src = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
-
             src_header = MySQLdb.escape_string(head_tag).encode('utf-8')
 
             sql = "insert into tb_news_resource (src_url, title, author_name, resource_from, content, content_src, content_read, " \
@@ -253,21 +282,6 @@ def tiny(soup):
     return soup
 
 def get_origin_html(soup):
-    # rParams = r'var (biz =.*?".*?");\s*var (sn =.*?".*?");\s*var (mid =.*?".*?");\s*var (idx =.*?".*?");'
-    # aaa = soup.find(text=re.compile(rParams))
-    # lines = aaa.split('\n')
-    # for l in lines:
-    #     l = l.strip()
-    #     if l.startswith('var biz ='):
-    #         biz = l.replace('var biz =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-    #     elif l.startswith('var sn ='):
-    #         sn = l.replace('var sn =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-    #     elif l.startswith('var mid ='):
-    #         mid = l.replace('var mid =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-    #     elif l.startswith('var idx ='):
-    #         idx = l.replace('var idx =', '').replace(' ', '').replace('\"', '').replace('|', '').replace(';', '')
-    # origin_url =  'http://mp.weixin.qq.com/s?__biz=%s&mid=%s&idx=%s&sn=%s' % (biz, mid, idx, sn)
-
     rParams = r'var (msg_link =.*?".*?");'
     aaa = soup.find(text = re.compile(rParams))
     lines = aaa.split('\n')
@@ -294,7 +308,7 @@ def process_pic(pic_url, pic_format, is_small = False):
         if pic_size <= 2500:
             small_pic = True
 
-        post_url = 'http://10.10.20.5:80/v1/image?suffix=.%s&simple_name=1' % pic_format
+        post_url = 'http://%s/v1/image?suffix=.%s&simple_name=1' % (tfs_post, pic_format)
         legal_filename = False
         while not legal_filename:
             r2 = requests.post(post_url, data = open(pic_path).read())
@@ -304,69 +318,188 @@ def process_pic(pic_url, pic_format, is_small = False):
             if len(segs) == 2:
                 legal_filename = True
             else:
-                print("%s, %s not legal" % (pic_url, origin_file_name))
+                continue
 
         if is_small or small_pic:
             file_name = origin_file_name
         else:
             file_name = os.path.splitext(origin_file_name)[0] + '_L' + os.path.splitext(origin_file_name)[1]
-        new_src = 'http://impic.zhisland.com/impic/' + file_name
+        new_src = 'http://%s%s' %  (tfs_get, file_name)
         return new_src.encode('utf-8'), small_pic
     except Exception as e:
         print e
         return '', False
 
 
-def filter_invalid_str(text):
-    try:
-        # UCS-4
-        highpoints = re.compile(u'[\U00010000-\U0010ffff]')
-    except re.error:
-        # UCS-2
-        highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
-    return highpoints.sub(u'', text)
-
-# http://mmbiz.qpic.cn/mmbiz/iclicNt0yXuppiaNh1ovibD2avzzFiaABSlljPmicx5PxUNW08K91Jzp0BsdO0yub7S2jGEdT77o0KDuY7S27SxNlmaw/0?wx_fmt=png
-
-def crawl_single(src_url):
-    rrr = requests.get(src_url)
-    a_soup = BeautifulSoup(rrr.text, 'html.parser')
-
-    artical_soup = a_soup.find('div', {'id':'js_content'})
-    if artical_soup is None:
-        return
-
-    iframe = artical_soup.find('iframe', class_='video_iframe')
-    if iframe is not None:
-        return
-
-    author_tag = a_soup.find('em', {'class':'rich_media_meta rich_media_meta_text', 'id':None})
-    if author_tag is not None:
-        author = author_tag.get_text().strip().encode('utf-8')
-    else:
-        author = ''
-
+def crawl_single(artical_soup, public_name):
     #对图片的修改
     pics = artical_soup.find_all('img', {'data-src':True})
     if pics is not None:
         for e in pics:
             try:
                 data_src = e.get('data-src')
+                pic_signature = get_pic_signature(data_src)
+                if pic_signature in filter_set:
+                    e.extract()
+                    continue
                 if e.has_attr('data-type'):
                     pic_format = e['data-type']
                 else:
                     pic_format = parse_imgFormat(data_src)
 
                 new_src, small_pic = process_pic(data_src, pic_format)
+
                 e.attrs['src'] = new_src
                 if small_pic:
                     e['class'] = 'small-image'
             except Exception as e:
                 print(e)
                 continue
+    try:
+        #对公众号的处理
+        if public_name == "华夏基石e洞察":
+            pass
+            # ul = artical_soup.find('ul')
+            # if ul:
+            #     ul.extract()
+        elif public_name == '春暖花开':
+            removes = []
+            a = artical_soup.find('span', text='如需转载，请联系春暖花开花小蜜')
+            if a:
+                pp = a.parent
+                if pp:
+                    for es in pp.next_elements:
+                        if type(es) == bs4.element.Tag:
+                            removes.append(es)
+                    for es in removes:
+                        es.extract()
+                    pp.extract()
+        elif public_name == '深蓝财经网':
+            removes = []
+            a = artical_soup.find('span', text='深蓝财经网 微信号：shenlancaijing')
+            if a is not None:
+                for es in a.parent.next_elements:
+                    if type(es) == bs4.element.Tag:
+                        removes.append(es)
+                for es in removes:
+                    es.extract()
+                a.parent.extract()
 
+        elif public_name == '华商韬略': #华商韬略
+            a = artical_soup.find_all('section', recursive=False)
+            if a is not None:
+                last_section = a[-1]
+                if last_section:
+                    last_section.extract()
+
+        elif public_name == '冯仑风马牛': #冯仑风马牛
+            sections = artical_soup.find_all('section', recursive=False)
+            if sections and len(sections) > 0:
+                removes = []
+                for es in sections[-1].next_elements:
+                    removes.append(es)
+                for es in removes:
+                    es.extract()
+                sections[-1].extract()
+
+        elif public_name == '环球老虎财经': #环球老虎财经
+            ss = artical_soup.find_all('hr', recursive=False)
+            if ss and len(ss) > 0:
+                s = ss[-1]
+                removes = []
+                for es in s.next_elements:
+                    removes.append(es)
+                for es in removes:
+                    es.extract()
+        elif public_name == '场景实验室': #场景实验室
+            end = artical_soup.find('strong', text='【END】')
+            if end:
+                removes = []
+                for es in end.parent.next_elements:
+                    removes.append(es)
+                for es in removes:
+                    es.extract()
+        elif public_name == '扑克投资家': #扑克投资家
+            hr = artical_soup.find('hr')
+            if hr:
+                removes = []
+                for es in hr.previous_elements:
+                    # if type(es) == bs4.element.Tag:
+                    removes.append(es)
+                for es in removes:
+                    es.extract()
+                hr.extract()
+            a = artical_soup.find('span', text='微信更新好，记得置顶哦')
+            if a is not None:
+                removes = []
+                for es in a.parent.next_elements:
+                    if type(es) == bs4.element.Tag:
+                        removes.append(es)
+                for es in removes:
+                    es.extract()
+                a.parent.extract()
+        elif public_name == '新经济100人': #新经济100人
+            sections = artical_soup.find_all('section', recursive=False)
+            if sections and len(sections) > 0:
+                sections[-1].extract()
+            ss = artical_soup.find('strong', text = '· E N D ·')
+            if ss:
+                ss.parent.parent.extract()
+        elif public_name == '笔记侠': #笔记侠
+            imgs = artical_soup.find_all('img', {'data-src':True})
+            if imgs and len(imgs) > 0:
+                ss = imgs[-1].parent.parent
+                ss.extract()
+
+        elif public_name == '创业家': #创业家
+            a = artical_soup.find_all('span', text='▼')[-1]
+            if a is not None:
+                removes = []
+                for es in a.parent.parent.next_elements:
+                    if type(es) == bs4.element.Tag:
+                        removes.append(es)
+                for es in removes:
+                    es.extract()
+        elif public_name == '秦朔朋友圈': #秦朔朋友圈
+            imgs = artical_soup.find_all('img', {'data-src':True})
+            if imgs and len(imgs) > 0:
+                p = imgs[-1].parent
+                removes = []
+                for es in p.next_elements:
+                    removes.append(es)
+                for es in removes:
+                    es.extract()
+                p.extract()
+
+        elif public_name == '华尔街见闻':
+            aaa = artical_soup.find('span', text='若转载请回复 授权 查看须知，否则一律举报。')
+            if aaa:
+                removes = []
+                for es in aaa.parent.next_elements:
+                    removes.append(es)
+                for es in removes:
+                    es.extract()
+
+
+        artical_copy_soup = BeautifulSoup(str(artical_soup), 'html.parser')
+        src_read = tiny(artical_copy_soup)
+        # print(src_read)
+        content_read = MySQLdb.escape_string(str(src_read).encode('utf-8'))
+        content_src = MySQLdb.escape_string(str(artical_soup).encode('utf-8'))
+        return content_read, content_src
+    except Exception as e:
+        print e
+        return None, None
+
+
+def test():
+    path = '/Users/Spirit/PycharmProjects/python-crawler/filter/笔记侠_1.html'
+    soup = BeautifulSoup(open(path))
+    soup2 = soup.find('div', {'id':'js_content'})
+    public_name = path.split('/')[-1].split('_')[0]
+    content_read, content_src = crawl_single(soup2, public_name)
 
 if __name__ == '__main__':
-    # pic()
-    # cover()
+    init()
     crawl()
+    # test()
