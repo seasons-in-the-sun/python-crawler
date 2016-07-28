@@ -25,8 +25,8 @@ __author__ = 'Spirit'
 
 
 config = ConfigParser.RawConfigParser()
-config.read('/home/ddtest/python-crawler/config.txt')
-# config.read('../config.txt')
+# config.read('/home/ddtest/python-crawler/config.txt')
+config.read('../config.txt')
 
 # 已经把微信的css放到tfs里面了
 head_tag = """
@@ -41,7 +41,7 @@ head_tag = """
 base_url = 'http://mp.weixin.qq.com'
 
 
-section = 'weixin_local'
+section = 'weixin_online'
 host = config.get(section, 'host')
 user = config.get(section, 'user')
 passwd = config.get(section, 'passwd')
@@ -127,7 +127,7 @@ def crawl():
         os.mkdir(pic_dir)
 
     # for linux headless brower
-    display = Display(visible=0, size=(1024, 768))
+    display = Display(visible=0, size=(800, 600))
     display.start()
 
     conn = pool.connection()
@@ -177,7 +177,13 @@ def crawl():
             if title.startswith('原创'):
                 title = title.replace('原创', '', 1).strip()
 
+
+            #有些文章不抓取:
             if title.startswith('每日花语') or '潮汐·扑克问答' in title:
+                continue
+            if public_name == '扑克投资家' and '百家第' in title and '期报名' in title:
+                continue
+            if public_name == '华商韬略' and '今日财经头条' in title:
                 continue
 
             if has_crawled(public_name, title, cur):
@@ -270,6 +276,8 @@ def parse_imgFormat(data_src):
 def tiny(soup):
     tags = soup.find_all()
     for t in tags:
+        if t.name == 'section':
+            continue
         for attr in ['id', 'name', 'style', 'height', 'width']:
             del t[attr]
 
@@ -305,7 +313,7 @@ def process_pic(pic_url, pic_format, is_small = False):
                 f.close()
         pic_size = os.path.getsize(pic_path)
         small_pic = False
-        if pic_size <= 2500:
+        if pic_size <= 2800:
             small_pic = True
 
         post_url = 'http://%s/v1/image?suffix=.%s&simple_name=1' % (tfs_post, pic_format)
@@ -427,7 +435,8 @@ def crawl_single(artical_soup, public_name):
                     # if type(es) == bs4.element.Tag:
                     removes.append(es)
                 for es in removes:
-                    es.extract()
+                    if es:
+                        es.extract()
                 hr.extract()
             a = artical_soup.find('span', text='微信更新好，记得置顶哦')
             if a is not None:
@@ -449,7 +458,8 @@ def crawl_single(artical_soup, public_name):
             imgs = artical_soup.find_all('img', {'data-src':True})
             if imgs and len(imgs) > 0:
                 ss = imgs[-1].parent.parent
-                ss.extract()
+                if ss:
+                    ss.extract()
 
         elif public_name == '创业家': #创业家
             a = artical_soup.find_all('span', text='▼')[-1]
@@ -497,8 +507,10 @@ def test():
     soup = BeautifulSoup(open(path))
     soup2 = soup.find('div', {'id':'js_content'})
     public_name = path.split('/')[-1].split('_')[0]
-    content_read, content_src = crawl_single(soup2, public_name)
+    # content_read, content_src = crawl_single(soup2, public_name)
 
+    a = tiny(soup2)
+    print a
 if __name__ == '__main__':
     init()
     crawl()
