@@ -7,8 +7,8 @@ user=fangdonghao
 passwd=fAKi_UlkHRO.HTHH
 db=zh_bms_cms
 port=4006
-pic_dir=/Users/Spirit/PycharmProjects/python-crawler/images
-public_name_path=/Users/Spirit/PycharmProjects/python-crawler/crawler/weixin.txt
+pic_dir=/home/ddtest/images/
+public_name_path=/home/ddtest/python-crawler/crawler/weixin.txt
 tfs_post=10.10.20.5:80
 tfs_get=impic.zhisland.com/impic/
 
