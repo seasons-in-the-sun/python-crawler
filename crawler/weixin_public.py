@@ -4,10 +4,8 @@ import requests
 from bs4 import BeautifulSoup
 import bs4
 import time
-import random
 from selenium import webdriver
 from urllib import quote
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import re
 import datetime
 import json
@@ -25,8 +23,8 @@ __author__ = 'Spirit'
 
 
 config = ConfigParser.RawConfigParser()
-# config.read('/home/ddtest/python-crawler/config.txt')
-config.read('../config.txt')
+config.read('/home/ddtest/python-crawler/config.txt')
+# config.read('../config.txt')
 
 # 已经把微信的css放到tfs里面了
 head_tag = """
@@ -47,8 +45,7 @@ user = config.get(section, 'user')
 passwd = config.get(section, 'passwd')
 db = config.get(section, 'db')
 port = config.getint(section, 'port')
-pool = PooledDB(MySQLdb, 3, host=host, user=user,
-                passwd=passwd, db=db, port=port, charset='utf8')
+pool = PooledDB(MySQLdb, 3, host=host, user=user, passwd=passwd, db=db, port=port, charset='utf8')
 pic_dir = config.get(section, 'pic_dir')
 public_name_path = config.get(section, 'public_name_path')
 tfs_post = config.get(section, 'tfs_post')
@@ -56,39 +53,6 @@ tfs_get = config.get(section, 'tfs_get')
 
 
 filter_set = set()
-black_pic_lists = set()
-#华夏基金e洞察
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/eYkgfnPPlD1HRCF2VNibOAoa0NIt3bz8zicYibF29c5eiafsX31VwmfnDnPJnwFIsua8QQR5jIl73tKrY8OmsCSVFg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/eYkgfnPPlD1HRCF2VNibOAoa0NIt3bz8zCH1a05AcicQjCRicYHMAsbMCSVSFPOuROvjZXSRcGYM0T0zh1Yvicz8Eg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-#春暖花开
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/WGXdicwmohqSS3X2z6XJ6tzlQWSAfFA5O3icn8QkR0XWV9pdAD5MIHc0jvBVNNNcePvPtWbW3Nfvjg7S8XibXRLbA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-#深蓝财经网
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/1LLeWMac7MkT0CEjObkBxg9N1D0crU2HQRpQQNvVks28XMtDmo81bDHqSC1hMoOpu1fTrOibpbCZuC8XTa8bxQQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-#华商韬略
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2y9FyicddUI6gUTqo8pnSGPFoKFL40fQezjIfcXHiaenbh11iaTS3cNqYjMIic59nkMuX5V4UiaxycMeRug/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2yicQN6Py6iaCppVRxCzS7lCzQ8DWg8uamQc7pSEZCDN7vaGOWM6KUicTQTfs8BO2libVyADEqFLkxBibeg/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2y8wbUrKFjExsibXRGqocCiaBnzT1aUDpEIu75uicZVic3pL3MfhoXwZdOPRmQLU2qO3nVAg9hT8wm0DoQ/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
-#扑克投资家
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxN2LD58GDBmp6bVH54Qnr4sbcWIribOGQ5F119P1wcAH6CGaIZqeV73A/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxOaDf0Ysh7x4tye0QTuwZz8fdI0QJRLN2rZMka6V4YxLU1vfJmemYgw/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxoGD8AXqK9q1W1Yq6wOZebuNgua5ibGib0Yia5uxL2KRyy8o0pbXNY9wEA/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
-#新经济100人
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/VYTjvVCzU38ZN35Wss2KNLBaz8PdQLep3OibdU5brHKVtxCxTWaIZ2cBHwdAOdENg9WhlUGhp6thK9RmBO7SW4Q/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-#虎嗅网
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/b2YlTLuGbKCKHPmMObFDLkW3WSh7HV3x1ga6ITIlPJAPCaBaszqmCzWzAbZCaUXNZUatnvJlgWceTRL84EicVng/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
-#创业家
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/5M8nWS1bzPiaArfwiamrCicbsUVLZichqWDvoEP4ib3z8D7ErH601OFtZ2Zl3MtEg1BbMHN5q9pNNq76icICDlbJQwew/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/5M8nWS1bzPiaArfwiamrCicbsUVLZichqWDvoEP4ib3z8D7ErH601OFtZ2Zl3MtEg1BbMHN5q9pNNq76icICDlbJQwew/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
-#笔记侠
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myjy1TIH6HVNsibbcF4W9fsxObU0WaMuNhHfYDb2xWfUeZrLicBo3ACX6fLMIGLKegPc87qcIabVgMFg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myjJkksibRulqCuHJasyKxuC7DtW5jxfL2xDGlnibQJIiaibAgXoIr6n0yNCYmrL8PztU6rddmZCs0XBkA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myiagS5lpSnFzct0YWhWYa5uShrUF0I0b1IY3pibpCJsDsa0Mia7Z4uzQeyhxln1cM7nWqAkYddiatVXbA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myiaQ5FMO2MKCqNPQEwWrtlZwo42aOtB2Sp0Z2dONuTUB1eqK8zsN5jfjLO4o3E4D0oDCyBsStXXhoA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-#场景实验室
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/lKnKdYpK3NmViaa5BfUcvQ7m1t7icEbhdRm30F7k3YMFluHncd3hnswL3c6QUJmDnMOhibxUzVkEbrmILnE8MM1SQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
-#华尔街见闻
-black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OVAmd6VfEiaOjS0Liapd9naDxaA36pN7d9GQCXJCqXyBia2bgjfpESqje14WQricjqYdGibwiameucZyiayTkmJL5fzQg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
-
 
 headers = {
     'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -100,6 +64,43 @@ headers = {
 
 
 def init():
+    black_pic_lists = set()
+    #华夏基金e洞察
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/eYkgfnPPlD1HRCF2VNibOAoa0NIt3bz8zicYibF29c5eiafsX31VwmfnDnPJnwFIsua8QQR5jIl73tKrY8OmsCSVFg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/eYkgfnPPlD1HRCF2VNibOAoa0NIt3bz8zCH1a05AcicQjCRicYHMAsbMCSVSFPOuROvjZXSRcGYM0T0zh1Yvicz8Eg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    #春暖花开
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/WGXdicwmohqSS3X2z6XJ6tzlQWSAfFA5O3icn8QkR0XWV9pdAD5MIHc0jvBVNNNcePvPtWbW3Nfvjg7S8XibXRLbA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    #深蓝财经网
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/1LLeWMac7MkT0CEjObkBxg9N1D0crU2HQRpQQNvVks28XMtDmo81bDHqSC1hMoOpu1fTrOibpbCZuC8XTa8bxQQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    #华商韬略
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2y9FyicddUI6gUTqo8pnSGPFoKFL40fQezjIfcXHiaenbh11iaTS3cNqYjMIic59nkMuX5V4UiaxycMeRug/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2yicQN6Py6iaCppVRxCzS7lCzQ8DWg8uamQc7pSEZCDN7vaGOWM6KUicTQTfs8BO2libVyADEqFLkxBibeg/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/K0g7vVJN2y8wbUrKFjExsibXRGqocCiaBnzT1aUDpEIu75uicZVic3pL3MfhoXwZdOPRmQLU2qO3nVAg9hT8wm0DoQ/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+    #扑克投资家
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxN2LD58GDBmp6bVH54Qnr4sbcWIribOGQ5F119P1wcAH6CGaIZqeV73A/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxOaDf0Ysh7x4tye0QTuwZz8fdI0QJRLN2rZMka6V4YxLU1vfJmemYgw/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OzZrKdIYd0eAWwNXNER65tE81sknIbZxoGD8AXqK9q1W1Yq6wOZebuNgua5ibGib0Yia5uxL2KRyy8o0pbXNY9wEA/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+    #新经济100人
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/VYTjvVCzU38ZN35Wss2KNLBaz8PdQLep3OibdU5brHKVtxCxTWaIZ2cBHwdAOdENg9WhlUGhp6thK9RmBO7SW4Q/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    #虎嗅网
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/b2YlTLuGbKCKHPmMObFDLkW3WSh7HV3x1ga6ITIlPJAPCaBaszqmCzWzAbZCaUXNZUatnvJlgWceTRL84EicVng/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
+    #创业家
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/5M8nWS1bzPiaArfwiamrCicbsUVLZichqWDvoEP4ib3z8D7ErH601OFtZ2Zl3MtEg1BbMHN5q9pNNq76icICDlbJQwew/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/5M8nWS1bzPiaArfwiamrCicbsUVLZichqWDvoEP4ib3z8D7ErH601OFtZ2Zl3MtEg1BbMHN5q9pNNq76icICDlbJQwew/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
+    #笔记侠
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myjy1TIH6HVNsibbcF4W9fsxObU0WaMuNhHfYDb2xWfUeZrLicBo3ACX6fLMIGLKegPc87qcIabVgMFg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myjJkksibRulqCuHJasyKxuC7DtW5jxfL2xDGlnibQJIiaibAgXoIr6n0yNCYmrL8PztU6rddmZCs0XBkA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myiagS5lpSnFzct0YWhWYa5uShrUF0I0b1IY3pibpCJsDsa0Mia7Z4uzQeyhxln1cM7nWqAkYddiatVXbA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/ZYpa3icG6myiaQ5FMO2MKCqNPQEwWrtlZwo42aOtB2Sp0Z2dONuTUB1eqK8zsN5jfjLO4o3E4D0oDCyBsStXXhoA/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    #场景实验室
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/lKnKdYpK3NmViaa5BfUcvQ7m1t7icEbhdRm30F7k3YMFluHncd3hnswL3c6QUJmDnMOhibxUzVkEbrmILnE8MM1SQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    #华尔街见闻
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OVAmd6VfEiaOjS0Liapd9naDxaA36pN7d9GQCXJCqXyBia2bgjfpESqje14WQricjqYdGibwiameucZyiayTkmJL5fzQg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1')
+    #金错刀
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/OI005aNCFV66FCWicjBezoUQkmj5lMPOnHB5bVeFuX4e4f06aXgzbl5X6neR33YeOI0YJ070KdbPG2Qdv5vVFPQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/f8qQDVOfjhyiaiaQ33TCYxzfPQRQEwl0WcUd1NOYf3zH4micvGAjFtzszibPeYP9k8faCno5SQdSsZ1Bic6KFCia0d0A/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1')
+    black_pic_lists.add('http://mmbiz.qpic.cn/mmbiz/f8qQDVOfjhyiaiaQ33TCYxzfPQRQEwl0Wc8OYQoDE6oX1K83fxGNOyl3ywcFLPgwOR47kiceibicwYHfxIfQiaxIK0Yw/0?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1')
+
     for p_url in black_pic_lists:
         sig = get_pic_signature(p_url)
         filter_set.add(sig)
@@ -277,6 +278,13 @@ def tiny(soup):
     tags = soup.find_all()
     for t in tags:
         if t.name == 'section':
+            # 尝试cssutils
+            # section = t['style']
+            # style = cssutils.parseStyle(section)
+            # print style.keys()
+            # if 'color' in style.keys():
+            #     del style['color']
+            # t['style'] = style.cssText.replace('\n', '')
             continue
         for attr in ['id', 'name', 'style', 'height', 'width']:
             del t[attr]
@@ -437,16 +445,18 @@ def crawl_single(artical_soup, public_name):
                 for es in removes:
                     if es:
                         es.extract()
-                hr.extract()
+                if hr:
+                    hr.extract()
             a = artical_soup.find('span', text='微信更新好，记得置顶哦')
-            if a is not None:
+            if a:
                 removes = []
                 for es in a.parent.next_elements:
                     if type(es) == bs4.element.Tag:
                         removes.append(es)
                 for es in removes:
                     es.extract()
-                a.parent.extract()
+                if a and a.parent:
+                    a.parent.extract()
         elif public_name == '新经济100人': #新经济100人
             sections = artical_soup.find_all('section', recursive=False)
             if sections and len(sections) > 0:
@@ -507,10 +517,9 @@ def test():
     soup = BeautifulSoup(open(path))
     soup2 = soup.find('div', {'id':'js_content'})
     public_name = path.split('/')[-1].split('_')[0]
-    # content_read, content_src = crawl_single(soup2, public_name)
+    content_read, content_src = crawl_single(soup2, public_name)
 
-    a = tiny(soup2)
-    print a
+
 if __name__ == '__main__':
     init()
     crawl()
